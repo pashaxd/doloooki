@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LeftNavigationController extends GetxController {
-  final RxInt selectedIndex = 2.obs;
+  final RxInt selectedIndex = 0.obs;
   final RxBool isOpen = true.obs;
   
   // Добавляем поля для данных стилиста
