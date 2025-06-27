@@ -13,4 +13,7 @@ linux/
 macos/
 windows/
 .dart_tool/
-node_modules/ 
+node_modules/
+
+# Force use of Dockerfile (disable buildpacks)
+.buildpacks 
