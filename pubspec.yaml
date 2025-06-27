@@ -1,0 +1,97 @@
+name: doloooki
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  get: ^4.6.6
+  get_it: ^8.0.3
+  carousel_slider: ^5.0.0
+  firebase_core: ^3.13.1
+  firebase_auth: ^5.5.4
+  cloud_firestore: ^5.6.8
+  flutter_svg: ^2.1.0
+  image_picker: ^1.1.2
+  firebase_storage: ^12.4.6
+  uuid: ^4.5.1
+  local_rembg: ^1.1.3
+  flutter_screenutil: ^5.9.3
+  mask_text_input_formatter: ^2.9.0
+  shared_preferences: ^2.5.3
+  flutter_box_transform: ^0.4.7
+  intl: ^0.20.2
+  video_player: ^2.10.0
+  responsive_framework: ^1.5.1
+  firebase_auth_web: ^5.15.0
+  cached_network_image: ^3.4.1
+  universal_html: ^2.2.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo/logo.png
+    - assets/onboarding/onboarding_video.mp4
+    - assets/onboarding/1st.png
+    - assets/onboarding/2nd.png
+    - assets/onboarding/3rd.png
+    - assets/onboarding/4th.png
+    - assets/icons/profile.png  
+    - assets/icons/avatar_pick.png
+    - assets/icons/supcription/fon.png
+    - assets/icons/supcription/garderob.png
+    - assets/icons/supcription/recomendations.png
+    - assets/icons/supcription/platye.png
+    - assets/icons/supcription/star.png
+    - assets/icons/notifications/green.png
+    - assets/icons/notifications/red.png
+    - assets/icons/supcription/card.png
+    - assets/icons/bottom_navigation/garderob.png
+    - assets/icons/bottom_navigation/obrazi.png
+    - assets/icons/bottom_navigation/profile.png
+    - assets/icons/bottom_navigation/recomendation.png
+    - assets/icons/bottom_navigation/stylist.png
+    - assets/icons/sms/i.svg
+    - assets/icons/profile/camera.svg
+    - assets/icons/profile/galery.svg
+    - assets/icons/patterns/svg/cursor.svg
+    - assets/icons/patterns/svg/size.svg
+    - assets/icons/patterns/svg/krutilka.svg
+    - assets/icons/patterns/svg/sloi.svg
+    - assets/icons/patterns/svg/armour.svg
+    - assets/icons/stylist/skirt.svg
+    - assets/icons/stylist/voka.svg
+    - assets/icons/stylist/star.svg
+    - assets/icons/stylist/consult.svg
+    - assets/icons/stylist/gallery.svg
+    - assets/icons/stylist/send.svg
+    - assets/icons/stylist/check.svg
+    - assets/icons/stylist/people.svg
+    - assets/icons/stylist/rate.svg
+    - assets/icons/profile/lichnoe.svg
+    - assets/icons/profile/notifs.svg
+    - assets/icons/profile/faq.svg
+    - assets/icons/profile/logout.svg
+    - assets/icons/notifications/notifs.svg
+    - assets/icons/profile/version.svg
+    - assets/icons/profile/usloviya.svg
+    - assets/icons/auth_pc/success.svg
+    - assets/icons/left_navigation/users.svg
+    - assets/icons/left_navigation/consultations.svg
+    - assets/icons/left_navigation/recomendations.svg
+    - assets/icons/left_navigation/settings.svg
+  fonts:
+    - family: MontserratRegular
+      fonts:
+        - asset: assets/fonts/Montserrat/26023618743.ttf
+    - family: MontserratBold
+      fonts:
+        - asset: assets/fonts/Montserrat/33107994939.ttf
+        

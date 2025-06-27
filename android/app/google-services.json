@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "416849058326",
+    "project_id": "dolooki-fb888",
+    "storage_bucket": "dolooki-fb888.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416849058326:android:b7d0259d85cebe0f97b337",
+        "android_client_info": {
+          "package_name": "com.example.dolooki"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgtdiPMHCCCVfzX34ZHLST651iXSS22uY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416849058326:android:e144080d906ea43c97b337",
+        "android_client_info": {
+          "package_name": "com.example.doloooki"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBgtdiPMHCCCVfzX34ZHLST651iXSS22uY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
