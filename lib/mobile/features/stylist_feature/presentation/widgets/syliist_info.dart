@@ -34,9 +34,50 @@ class SyliistInfo extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Профиль стилиста', style: TextStyles.titleLarge,),
-            CircleAvatar(
-              radius: 45.sp,
-              backgroundImage: NetworkImage(stylist.image),
+            Container(
+              width: 90.sp,
+              height: 90.sp,
+              decoration: BoxDecoration(
+                color: Palette.red400,
+                shape: BoxShape.circle,
+              ),
+              child: ClipOval(
+                child: stylist.profileImage.isNotEmpty
+                    ? Image.network(
+                        stylist.profileImage,
+                        width: 90.sp,
+                        height: 90.sp,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: CircularProgressIndicator(
+                              color: Palette.white100,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace) {
+                          print('❌ Error loading stylist image: $error');
+                          return Container(
+                            color: Palette.red400,
+                            child: Icon(
+                              Icons.person,
+                              color: Palette.white100,
+                              size: 45.sp,
+                            ),
+                          );
+                        },
+                      )
+                    : Container(
+                        color: Palette.red400,
+                        child: Icon(
+                          Icons.person,
+                          color: Palette.white100,
+                          size: 45.sp,
+                        ),
+                      ),
+              ),
             ),
             Text(stylist.name, style: TextStyles.titleLarge,),
             Text(stylist.shortDescription, style: TextStyles.bodyMedium.copyWith(color: Palette.white100)),

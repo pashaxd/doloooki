@@ -197,49 +197,47 @@ class ChoosingStylistScreen extends StatelessWidget {
                               ),
                               SizedBox(width: 12.sp),
                               Container(
-                                width: 35.sp,
-                                height: 35.sp,
+                                width: 50.sp,
+                                height: 50.sp,
                                 decoration: BoxDecoration(
                                   color: Palette.red200,
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(25.sp),
                                 ),
                                 child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(20),
-                                  child: stylist.image.isNotEmpty
+                                  borderRadius: BorderRadius.circular(25.sp),
+                                  child: stylist.profileImage.isNotEmpty
                                       ? Image.network(
-                                          stylist.image,
-                                          width: 40.sp,
-                                          height: 40.sp,
+                                          stylist.profileImage,
+                                          width: 50.sp,
+                                          height: 50.sp,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (context, error, stackTrace) {
+                                          loadingBuilder: (context, child, loadingProgress) {
+                                            if (loadingProgress == null) return child;
                                             return Center(
-                                              child: SizedBox(
-                                                width: 20.sp,
-                                                height: 20.sp,
-                                                child: SvgPicture.asset(
-                                                  'assets/icons/stylist/voka.svg',
-                                                  colorFilter: ColorFilter.mode(
-                                                    Palette.white100,
-                                                    BlendMode.srcIn,
-                                                  ),
-                                                  fit: BoxFit.contain,
-                                                ),
+                                              child: CircularProgressIndicator(
+                                                color: Palette.white100,
+                                                strokeWidth: 2,
+                                              ),
+                                            );
+                                          },
+                                          errorBuilder: (context, error, stackTrace) {
+                                            print('❌ Error loading stylist image in list: $error');
+                                            return Container(
+                                              color: Palette.red200,
+                                              child: Icon(
+                                                Icons.person,
+                                                color: Palette.white100,
+                                                size: 25.sp,
                                               ),
                                             );
                                           },
                                         )
-                                      : Center(
-                                          child: SizedBox(
-                                            width: 20.sp,
-                                            height: 20.sp,
-                                            child: SvgPicture.asset(
-                                              'assets/icons/stylist/voka.svg',
-                                              colorFilter: ColorFilter.mode(
-                                                Palette.white100,
-                                                BlendMode.srcIn,
-                                              ),
-                                              fit: BoxFit.contain,
-                                            ),
+                                      : Container(
+                                          color: Palette.red200,
+                                          child: Icon(
+                                            Icons.person,
+                                            color: Palette.white100,
+                                            size: 25.sp,
                                           ),
                                         ),
                                 ),

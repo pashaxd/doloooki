@@ -192,9 +192,9 @@ class _AddingRequestScreenState extends State<AddingRequestScreen> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(30.sp),
-                                  child: controller.selectedStylist.value!.image.isNotEmpty
+                                  child: controller.selectedStylist.value!.profileImage.isNotEmpty
                                       ? Image.network(
-                                          controller.selectedStylist.value!.image,
+                                          controller.selectedStylist.value!.profileImage,
                                           fit: BoxFit.cover,
                                           errorBuilder: (context, error, stackTrace) {
                                             return Container(

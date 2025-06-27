@@ -3,7 +3,7 @@ import 'package:doloooki/mobile/features/stylist_feature/data/models/review_mode
 class StylistModel {
   final String id;
   final String name;
-  final String image;
+  final String profileImage;
   final String shortDescription;
   final String description;
   List<ReviewModel> reviews;
@@ -13,7 +13,7 @@ class StylistModel {
   StylistModel({
     required this.id,
     required this.name,
-    required this.image,
+    required this.profileImage,
     required this.shortDescription,
     required this.description,
     required this.reviews,

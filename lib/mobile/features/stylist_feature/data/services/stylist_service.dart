@@ -19,6 +19,10 @@ class StylistService {
         final data = doc.data() as Map<String, dynamic>;
         print('📋 Document data: $data');
         
+        // ДОБАВЛЕНО: Отладка поля image
+        final imageField = data['image'] ?? data['profileImage'] ?? '';
+        print('🖼️ Image field for ${data['name']}: "$imageField"');
+        
         // Получаем отзывы для стилиста из подколлекции
         List<ReviewModel> reviews = [];
         final reviewsSnapshot = await _firestore
@@ -54,14 +58,14 @@ class StylistService {
         final stylist = StylistModel(
           id: doc.id,
           name: data['name'] ?? '',
-          image: data['image'] ?? '',
+          profileImage: imageField, // ИСПРАВЛЕНО: Используем правильное поле
           shortDescription: data['shortDescription'] ?? '',
           description: data['description'] ?? '',
           reviews: reviews,
           consultationsCount: data['consultationsCount'] ?? data['consultionsCount'] ?? 0,
         );
         
-        print('✅ Created stylist: ${stylist.name} (${stylist.shortDescription})');
+        print('✅ Created stylist: ${stylist.name} (${stylist.shortDescription}) with image: "${stylist.profileImage}"');
         stylists.add(stylist);
       }
       
@@ -81,6 +85,10 @@ class StylistService {
       if (!doc.exists) return null;
       
       final data = doc.data() as Map<String, dynamic>;
+      
+      // ДОБАВЛЕНО: Отладка поля image
+      final imageField = data['image'] ?? data['profileImage'] ?? '';
+      print('🖼️ Image field for stylist ${stylistId}: "$imageField"');
       
       // Получаем отзывы для стилиста из подколлекции
       List<ReviewModel> reviews = [];
@@ -117,7 +125,7 @@ class StylistService {
       return StylistModel(
         id: doc.id,
         name: data['name'] ?? '',
-        image: data['image'] ?? '',
+        profileImage: imageField, // ИСПРАВЛЕНО: Используем правильное поле
         shortDescription: data['shortDescription'] ?? '',
         description: data['description'] ?? '',
         reviews: reviews,
