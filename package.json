@@ -3,11 +3,13 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "build": "echo 'Build completed - using pre-built Flutter web files'"
+    "start": "node index.js"
   },
   "dependencies": {
     "firebase": "^11.9.1",
     "express": "^4.18.2"
+  },
+  "engines": {
+    "node": "18"
   }
 }
