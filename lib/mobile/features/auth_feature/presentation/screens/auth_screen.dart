@@ -11,21 +11,42 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
-class AuthScreen extends GetView<AuthController> {
-  final AuthController authController = Get.put(AuthController());
+class AuthScreen extends StatelessWidget {
   final RxBool isNumberField = false.obs;
-  AuthScreen({super.key}) {
-    // Reset verificationId when returning from SMS screen
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      authController.resetVerificationState();
-      // Принудительно обновляем состояние кнопки
-      authController.isButtonEnabled.value = authController.phoneController.text.length == 16;
-    });
+  
+  AuthScreen({super.key});
+
+  AuthController get controller {
+    // Безопасно получаем или создаем контроллер
+    if (Get.isRegistered<AuthController>()) {
+      try {
+        return Get.find<AuthController>();
+      } catch (e) {
+        // Если контроллер поврежден, удаляем его и создаем новый
+        print('🔄 AuthController поврежден, создаем новый: $e');
+        Get.delete<AuthController>();
+        return Get.put(AuthController());
+      }
+    } else {
+      return Get.put(AuthController());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-
+    // Инициализируем контроллер в build методе
+    final authController = controller;
+    
+    // Reset verificationId when returning from SMS screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        authController.resetVerificationState();
+        // Принудительно обновляем состояние кнопки
+        authController.isButtonEnabled.value = authController.phoneController.text.length == 16;
+      } catch (e) {
+        print('⚠️ Ошибка при сбросе состояния: $e');
+      }
+    });
 
     // Создаем маску для телефонного номера
     final maskFormatter = MaskTextInputFormatter(
@@ -33,6 +54,7 @@ class AuthScreen extends GetView<AuthController> {
         filter: {"#": RegExp(r'[0-9]')},
         type: MaskAutoCompletionType.lazy
     );
+
     return Container(
       color: Palette.red600,
       child: SafeArea(
@@ -56,62 +78,62 @@ class AuthScreen extends GetView<AuthController> {
                       style: TextStyles.bodyLarge,
                     ),
                     SizedBox(height: Consts.screenHeight(context)*0.02),
-                  Obx(() => Column(
-                    spacing: 5.sp,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Номер телефона',
-                        style: TextStyles.labelMedium.copyWith(
-                            color: isNumberField.value ? Palette.white200 : Palette.grey350
-                        ),
-                      ),
-                      Container(
-                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                            border: isNumberField.value
-                                ? Border.all(color: Palette.white200)
-                                : Border.all(width: 0),
-                            color: Palette.red400,
-                            borderRadius: BorderRadius.circular(20)
-                        ),
-                        child: TextField(
-                          inputFormatters: [maskFormatter], // Применяем маску
-                          maxLength: 16, // Максимальная длина с учетом маски
-                          keyboardType: TextInputType.phone,
-                          onTap: () {
-                            isNumberField.value = true;
-
-                            authController.phoneController.text ==''? authController.phoneController.text = '+7 ': authController.phoneController.text;
-                            FocusScope.of(context).requestFocus();
-                          },
-                          onTapOutside: (_) {
-                            isNumberField.value = false;
-                            FocusScope.of(context).unfocus();
-                          },
-                          showCursor: isNumberField.value,
-                          style: TextStyles.bodyLarge.copyWith(
+                  
+                    Obx(() => Column(
+                      spacing: 5.sp,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Номер телефона',
+                          style: TextStyles.labelMedium.copyWith(
                               color: isNumberField.value ? Palette.white200 : Palette.grey350
                           ),
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: '+7 916 454-99-88',
-                            hintStyle: TextStyles.bodyLarge.copyWith(color: Palette.grey350),
-                            counterText: '',
-                          ),
-                          controller: authController.phoneController,
                         ),
-                      ),
-                      Text(
-                        'Мы отправим вам СМС с кодом для входа в приложение',
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                              border: isNumberField.value
+                                  ? Border.all(color: Palette.white200)
+                                  : Border.all(width: 0),
+                              color: Palette.red400,
+                              borderRadius: BorderRadius.circular(20)
+                          ),
+                          child: TextField(
+                            inputFormatters: [maskFormatter], // Применяем маску
+                            maxLength: 16, // Максимальная длина с учетом маски
+                            keyboardType: TextInputType.phone,
+                            onTap: () {
+                              isNumberField.value = true;
 
-                        style: TextStyles.labelMedium.copyWith(color: Palette.grey350),
-                      ),
-                    ],
-                  )),
+                              authController.phoneController.text ==''? authController.phoneController.text = '+7 ': authController.phoneController.text;
+                              FocusScope.of(context).requestFocus();
+                            },
+                            onTapOutside: (_) {
+                              isNumberField.value = false;
+                              FocusScope.of(context).unfocus();
+                            },
+                            showCursor: isNumberField.value,
+                            style: TextStyles.bodyLarge.copyWith(
+                                color: isNumberField.value ? Palette.white200 : Palette.grey350
+                            ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: '+7 916 454-99-88',
+                              hintStyle: TextStyles.bodyLarge.copyWith(color: Palette.grey350),
+                              counterText: '',
+                            ),
+                            controller: authController.phoneController,
+                          ),
+                        ),
+                        Text(
+                          'Мы отправим вам СМС с кодом для входа в приложение',
 
+                          style: TextStyles.labelMedium.copyWith(color: Palette.grey350),
+                        ),
+                      ],
+                    )),
 
-                          Spacer(),
+                    Spacer(),
                     Center(
                         child: Wrap(
                           alignment: WrapAlignment.center,

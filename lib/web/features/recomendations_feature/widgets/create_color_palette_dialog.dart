@@ -24,13 +24,29 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
   bool _isLoading = false;
   
   @override
+  void initState() {
+    super.initState();
+    // Добавляем одну пустую комбинацию по умолчанию
+    _combinations.add(['', '', '', '']);
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
     super.dispose();
   }
   
-  bool get _isValid => _nameController.text.trim().isNotEmpty && _colors.isNotEmpty;
+  // Проверка валидности формы
+  bool get _isValid {
+    final hasName = _nameController.text.trim().isNotEmpty;
+    final hasMinColors = _colors.length >= 4;
+    final hasValidCombination = _combinations.any((combination) => 
+      combination.where((c) => c.isNotEmpty).length == 4
+    );
+    
+    return hasName && hasMinColors && hasValidCombination;
+  }
   
   void _addColor() {
     final controller = TextEditingController();
@@ -109,9 +125,19 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
   }
   
   void _removeCombination(int index) {
-    setState(() {
-      _combinations.removeAt(index);
-    });
+    // Не позволяем удалить последнюю комбинацию
+    if (_combinations.length > 1) {
+      setState(() {
+        _combinations.removeAt(index);
+      });
+    } else {
+      Get.snackbar(
+        'Внимание',
+        'Должна быть хотя бы одна комбинация',
+        backgroundColor: Palette.red400,
+        colorText: Palette.white100,
+      );
+    }
   }
   
   void _updateCombinationColor(int combIndex, int colorIndex, String colorHex) {
@@ -128,32 +154,41 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
     });
     
     try {
-      // Создаем документ палитры
-      final paletteDoc = FirebaseFirestore.instance.collection('recColors').doc();
+      // Проверяем минимальные требования
+      if (_colors.length < 4) {
+        throw Exception('Добавьте минимум 4 цвета');
+      }
       
-      // Подготавливаем комбинации - только те, что заполнены
+      // Подготавливаем комбинации - только те, что полностью заполнены (4 цвета)
       final List<String> validCombinations = [];
       for (final combination in _combinations) {
         final filledColors = combination.where((c) => c.isNotEmpty).toList();
         if (filledColors.length == 4) {
-          validCombinations.add(filledColors.join(', '));
+          validCombinations.add(filledColors.join(','));
         }
       }
       
-      // Сохраняем палитру
+      if (validCombinations.isEmpty) {
+        throw Exception('Добавьте минимум одну полную комбинацию (4 цвета)');
+      }
+      
+      // Создаем документ палитры
+      final paletteDoc = FirebaseFirestore.instance.collection('recColors').doc();
+      
+      // Сохраняем палитру в том же формате, что показан на скриншоте
       await paletteDoc.set({
         'name': _nameController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'colors': _colors,
-        'combinations': validCombinations,
+        'colors': _colors, // Список цветов (минимум 4)
+        'combinations': validCombinations, // Список комбинаций (минимум 1)
         'createdAt': FieldValue.serverTimestamp(),
       });
       
       Get.back();
       Get.snackbar(
         'Успех',
-        'Цветовая палитра создана',
-        backgroundColor: Palette.red100,
+        'Цветовая палитра "${_nameController.text.trim()}" создана',
+        backgroundColor: Palette.success,
         colorText: Palette.white100,
       );
       
@@ -344,7 +379,7 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
                                 child: Row(
                                   children: [
                                     Text(
-                                      'Цвета',
+                                      'Цвета (минимум 4)',
                                       style: TextStyles.titleMedium.copyWith(color: Palette.white100),
                                     ),
                                     const Spacer(),
@@ -384,7 +419,7 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
                                               style: TextStyles.titleSmall.copyWith(color: Palette.white100),
                                             ),
                                             Text(
-                                              'Добавьте цвета для палитры',
+                                              'Добавьте минимум 4 цвета',
                                               style: TextStyles.bodySmall.copyWith(color: Palette.grey350),
                                             ),
                                           ],
@@ -426,7 +461,7 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
                                 child: Row(
                                   children: [
                                     Text(
-                                      'Комбинации цветов',
+                                      'Комбинации цветов (минимум 1)',
                                       style: TextStyles.titleMedium.copyWith(color: Palette.white100),
                                     ),
                                     const Spacer(),
@@ -450,36 +485,14 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
                               
                               // Список комбинаций
                               Expanded(
-                                child: _combinations.isEmpty
-                                    ? Center(
-                                        child: Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.color_lens_outlined,
-                                              size: ResponsiveUtils.containerSize(48.sp),
-                                              color: Palette.grey350,
-                                            ),
-                                            SizedBox(height: ResponsiveUtils.containerSize(12.h)),
-                                            Text(
-                                              'Нет комбинаций',
-                                              style: TextStyles.titleSmall.copyWith(color: Palette.white100),
-                                            ),
-                                            Text(
-                                              'Добавьте цветовые комбинации',
-                                              style: TextStyles.bodySmall.copyWith(color: Palette.grey350),
-                                            ),
-                                          ],
-                                        ),
-                                      )
-                                    : ListView.separated(
-                                        padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.containerSize(20.w)),
-                                        itemCount: _combinations.length,
-                                        separatorBuilder: (context, index) => SizedBox(height: ResponsiveUtils.containerSize(12.h)),
-                                        itemBuilder: (context, index) {
-                                          return _buildCombinationCard(index);
-                                        },
-                                      ),
+                                child: ListView.separated(
+                                  padding: EdgeInsets.symmetric(horizontal: ResponsiveUtils.containerSize(20.w)),
+                                  itemCount: _combinations.length,
+                                  separatorBuilder: (context, index) => SizedBox(height: ResponsiveUtils.containerSize(12.h)),
+                                  itemBuilder: (context, index) {
+                                    return _buildCombinationCard(index);
+                                  },
+                                ),
                               ),
                             ],
                           ),
@@ -541,40 +554,52 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
   }
   
   Widget _buildColorCard(int index) {
-    final colorHex = _colors[index];
+    final color = _colors[index];
     final controller = Get.find<RecController>();
     
     return Container(
       decoration: BoxDecoration(
-        color: Color(controller.getColorFromHex(colorHex)),
+        color: Color(controller.getColorFromHex(color)),
         borderRadius: BorderRadius.circular(ResponsiveUtils.containerSize(12.r)),
-        border: Border.all(color: Palette.white100, width: 2),
+        border: Border.all(color: Palette.grey350, width: 1),
       ),
       child: Stack(
         children: [
-          // Удаление цвета
+          // Превью цвета
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(ResponsiveUtils.containerSize(12.r)),
+            ),
+          ),
+          
+          // Кнопка удаления
           Positioned(
             top: ResponsiveUtils.containerSize(4.h),
             right: ResponsiveUtils.containerSize(4.w),
-            child: GestureDetector(
-              onTap: () => _removeColor(index),
-              child: Container(
-                width: ResponsiveUtils.containerSize(20.w),
-                height: ResponsiveUtils.containerSize(20.h),
-                decoration: const BoxDecoration(
-                  color: Colors.red,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(ResponsiveUtils.containerSize(12.r)),
+              ),
+              child: IconButton(
+                onPressed: () => _removeColor(index),
+                icon: Icon(
                   Icons.close,
-                  color: Colors.white,
-                  size: ResponsiveUtils.containerSize(14.sp),
+                  color: Palette.white100,
+                  size: ResponsiveUtils.containerSize(16.sp),
+                ),
+                padding: EdgeInsets.zero,
+                constraints: BoxConstraints(
+                  minWidth: ResponsiveUtils.containerSize(24.w),
+                  minHeight: ResponsiveUtils.containerSize(24.h),
                 ),
               ),
             ),
           ),
           
-          // Текст с HEX кодом
+          // HEX код внизу
           Positioned(
             bottom: ResponsiveUtils.containerSize(4.h),
             left: ResponsiveUtils.containerSize(4.w),
@@ -585,18 +610,16 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
                 vertical: ResponsiveUtils.containerSize(2.h),
               ),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.7),
+                color: Colors.black54,
                 borderRadius: BorderRadius.circular(ResponsiveUtils.containerSize(4.r)),
               ),
               child: Text(
-                colorHex,
+                color.toUpperCase(),
                 style: TextStyles.bodySmall.copyWith(
-                  color: Colors.white,
+                  color: Palette.white100,
                   fontSize: ResponsiveUtils.containerSize(10.sp),
                 ),
                 textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
               ),
             ),
           ),
@@ -604,17 +627,22 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
       ),
     );
   }
-  
+
   Widget _buildCombinationCard(int index) {
     final combination = _combinations[index];
     final controller = Get.find<RecController>();
+    final filledColors = combination.where((c) => c.isNotEmpty).length;
+    final isComplete = filledColors == 4;
     
     return Container(
       padding: EdgeInsets.all(ResponsiveUtils.containerSize(12.sp)),
       decoration: BoxDecoration(
         color: Palette.red400,
         borderRadius: BorderRadius.circular(ResponsiveUtils.containerSize(12.r)),
-        border: Border.all(color: Palette.red300, width: 1),
+        border: Border.all(
+          color: isComplete ? Palette.success : Palette.red300, 
+          width: isComplete ? 2 : 1
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -626,11 +654,21 @@ class _CreateColorPaletteDialogState extends State<CreateColorPaletteDialog> {
                 'Комбинация ${index + 1}',
                 style: TextStyles.titleSmall.copyWith(color: Palette.white100),
               ),
-              const Spacer(),
-              IconButton(
-                onPressed: () => _removeCombination(index),
-                icon: Icon(Icons.delete, color: Palette.error, size: ResponsiveUtils.containerSize(20.sp)),
+              SizedBox(width: ResponsiveUtils.containerSize(8.w)),
+              if (isComplete)
+                Icon(Icons.check_circle, color: Palette.success, size: ResponsiveUtils.containerSize(16.sp)),
+              Text(
+                '($filledColors/4)',
+                style: TextStyles.bodySmall.copyWith(
+                  color: isComplete ? Palette.success : Palette.grey350
+                ),
               ),
+              const Spacer(),
+              if (_combinations.length > 1)
+                IconButton(
+                  onPressed: () => _removeCombination(index),
+                  icon: Icon(Icons.delete, color: Palette.error, size: ResponsiveUtils.containerSize(20.sp)),
+                ),
             ],
           ),
           SizedBox(height: ResponsiveUtils.containerSize(8.h)),

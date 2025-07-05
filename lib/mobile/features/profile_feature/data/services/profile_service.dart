@@ -28,7 +28,41 @@ class ProfileService {
   }
 
   Future<void> logout() async {
-    await _auth.signOut();
+    try {
+      print('🔄 Начинаем процесс выхода из аккаунта...');
+      
+      // 1. Сначала выходим из Firebase Auth
+      // Это автоматически запустит authStateChanges во всех контроллерах
+      await _auth.signOut();
+      print('✅ Firebase Auth signOut выполнен');
+      
+      // 2. Сразу переходим на экран онбординга (до очистки контроллеров)
+      Get.offAll(() => OnboardingScreen());
+      print('✅ Переход на OnboardingScreen выполнен');
+      
+      // 3. Даем время UI обновиться и затем безопасно очищаем контроллеры
+      await Future.delayed(Duration(milliseconds: 300));
+      Get.deleteAll();
+      print('✅ Контроллеры GetX очищены');
+      
+      print('✅ Успешный выход из аккаунта завершен');
+    } catch (e) {
+      print('❌ Ошибка при выходе из аккаунта: $e');
+      
+      // В случае ошибки все равно пытаемся очистить и перейти
+      try {
+        await _auth.signOut();
+      } catch (signOutError) {
+        print('❌ Ошибка при signOut: $signOutError');
+      }
+      
+      // Сразу переходим на онбординг
+      Get.offAll(() => OnboardingScreen());
+      
+      // Даем больше времени в случае ошибки
+      await Future.delayed(Duration(milliseconds: 500));
+      Get.deleteAll();
+    }
   }
 
   Future<File?> pickImageFromGallery() async {
@@ -91,47 +125,7 @@ class ProfileService {
     if (user == null) return;
     
     try {
-      // Показываем диалог подтверждения
-      final confirmed = await Get.dialog<bool>(
-        AlertDialog(
-          backgroundColor: Palette.red400,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            'Удаление аккаунта',
-            style: TextStyles.titleLarge.copyWith(color: Palette.white100),
-          ),
-          content: Text(
-            'Вы действительно хотите удалить свой аккаунт? Все ваши данные будут безвозвратно утеряны.',
-            style: TextStyles.bodyMedium.copyWith(color: Palette.grey350),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(result: false),
-              child: Text(
-                'Отмена',
-                style: TextStyles.bodyMedium.copyWith(color: Palette.grey350),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Get.back(result: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Palette.error,
-                foregroundColor: Palette.white100,
-              ),
-              child: Text(
-                'Удалить навсегда',
-                style: TextStyles.bodyMedium.copyWith(color: Palette.white100),
-              ),
-            ),
-          ],
-        ),
-        barrierDismissible: false,
-      );
-      
-      if (confirmed != true) return;
-      
+      // Сразу выполняем удаление аккаунта без подтверждения
       await _performAccountDeletion();
       
     } catch (e) {
@@ -175,6 +169,9 @@ class ProfileService {
     await _deleteSubcollection(userDocRef, 'notifications');
     await _deleteSubcollection(userDocRef, 'patterns');
     await _deleteSubcollection(userDocRef, 'wardrobe');
+    await _deleteSubcollection(userDocRef, 'chats');
+    await _deleteSubcollection(userDocRef, 'custom_tags');
+    await _deleteSubcollection(userDocRef, 'requests');
     
     // 2. Удаляем все файлы из Storage
     await _deleteUserStorage(userId);
@@ -203,48 +200,7 @@ class ProfileService {
       
       final phoneNumber = phoneProvider.phoneNumber!;
       
-      // Показываем диалог с информацией о повторной аутентификации
-      final shouldProceed = await Get.dialog<bool>(
-        AlertDialog(
-          backgroundColor: Palette.red400,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            'Подтверждение безопасности',
-            style: TextStyles.titleLarge.copyWith(color: Palette.white100),
-          ),
-          content: Text(
-            'Для удаления аккаунта необходимо подтвердить ваш номер телефона: $phoneNumber\n\nМы отправим SMS с кодом подтверждения.',
-            style: TextStyles.bodyMedium.copyWith(color: Palette.grey350),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Get.back(result: false),
-              child: Text(
-                'Отмена',
-                style: TextStyles.bodyMedium.copyWith(color: Palette.grey350),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Get.back(result: true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Palette.red100,
-                foregroundColor: Palette.white100,
-              ),
-              child: Text(
-                'Отправить код',
-                style: TextStyles.bodyMedium.copyWith(color: Palette.white100),
-              ),
-            ),
-          ],
-        ),
-        barrierDismissible: false,
-      );
-      
-      if (shouldProceed != true) return false;
-      
-      // Отправляем SMS код
+      // Сразу отправляем SMS код без дополнительного подтверждения
       bool authSuccess = false;
       
       await _auth.verifyPhoneNumber(

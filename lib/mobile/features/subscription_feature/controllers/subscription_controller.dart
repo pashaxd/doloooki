@@ -1,12 +1,18 @@
 import 'package:doloooki/mobile/features/subscription_feature/models/payment_card.dart';
+import 'package:doloooki/mobile/features/subscription_feature/models/subscription_model.dart';
 import 'package:doloooki/mobile/features/subscription_feature/services/payment_service.dart';
+import 'package:doloooki/mobile/features/subscription_feature/services/subscription_service.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
 
 class SubscriptionController extends GetxController {
   final PaymentService paymentService = PaymentService();
+  final SubscriptionService subscriptionService = SubscriptionService();
   StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<List<SubscriptionModel>>? _expiringSubscriptionsSubscription;
   
   // Состояние загрузки
   final RxBool isLoading = false.obs;
@@ -19,6 +25,11 @@ class SubscriptionController extends GetxController {
 
   final RxBool hasSavedCards = false.obs;
 
+  // Подписка
+  final Rx<SubscriptionModel?> currentSubscription = Rx<SubscriptionModel?>(null);
+  final RxBool needsSubscription = false.obs;
+  final RxBool hasUsedTrial = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -29,9 +40,24 @@ class SubscriptionController extends GetxController {
         userCards.value = [];
         hasSavedCards.value = false;
         selectedCard.value = null;
+        currentSubscription.value = null;
+        needsSubscription.value = false;
+        hasUsedTrial.value = false;
       } else {
-        // Пользователь вошел в систему, загружаем карты
-        loadUserCards();
+        // Пользователь вошел в систему, загружаем данные
+        loadUserData();
+      }
+    });
+
+    // Слушаем подписки, которые истекают
+    _expiringSubscriptionsSubscription = subscriptionService
+        .getExpiringSubscriptions()
+        .listen((expiringSubscriptions) {
+      for (final subscription in expiringSubscriptions) {
+        subscriptionService.createExpirationNotification(
+          subscription.userId, 
+          subscription
+        );
       }
     });
   }
@@ -39,7 +65,35 @@ class SubscriptionController extends GetxController {
   @override
   void onClose() {
     _authSubscription?.cancel();
+    _expiringSubscriptionsSubscription?.cancel();
     super.onClose();
+  }
+
+  // Загрузка данных пользователя
+  Future<void> loadUserData() async {
+    loadUserCards();
+    await loadSubscriptionData();
+  }
+
+  // Загрузка данных подписки
+  Future<void> loadSubscriptionData() async {
+    try {
+      final subscription = await subscriptionService.getCurrentSubscription();
+      currentSubscription.value = subscription;
+      
+      final trialUsed = await subscriptionService.hasUsedTrial();
+      hasUsedTrial.value = trialUsed;
+      
+      final needsSub = await subscriptionService.needsSubscription();
+      needsSubscription.value = needsSub;
+      
+      // Если нужна подписка, показываем окно подписки
+      if (needsSub) {
+        showSubscriptionDialog();
+      }
+    } catch (e) {
+      print('Error loading subscription data: $e');
+    }
   }
 
   // Загрузка карт пользователя
@@ -75,6 +129,137 @@ class SubscriptionController extends GetxController {
         selectedCard.value = null;
       },
     );
+  }
+
+  // Показать диалог подписки
+  void showSubscriptionDialog() {
+    Get.dialog(
+      WillPopScope(
+        onWillPop: () async => false, // Запрещаем закрытие по кнопке назад
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 20.sp),
+            padding: EdgeInsets.all(20.sp),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.star,
+                  color: Colors.amber,
+                  size: 60.sp,
+                ),
+                SizedBox(height: 16.sp),
+                Text(
+                  'Попробуйте премиум функции',
+                  style: TextStyle(
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8.sp),
+                Text(
+                  'Получите доступ ко всем функциям приложения на 7 дней бесплатно',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.grey[600],
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 20.sp),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.back();
+                          startTrialPeriod();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text('Начать пробный период'),
+                      ),
+                    ),
+                    SizedBox(width: 12.sp),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Get.back();
+                          Get.toNamed('/subscription');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.grey[300],
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text('Купить подписку'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      barrierDismissible: false,
+    );
+  }
+
+  // Начать пробный период
+  Future<void> startTrialPeriod() async {
+    try {
+      isLoading.value = true;
+      await subscriptionService.startTrialPeriod();
+      await loadSubscriptionData();
+      Get.snackbar(
+        'Успех',
+        'Пробный период активирован на 7 дней',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Ошибка',
+        'Не удалось активировать пробный период',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  // Покупка месячной подписки
+  Future<void> purchaseMonthlySubscription() async {
+    try {
+      isLoading.value = true;
+      await subscriptionService.purchaseMonthlySubscription();
+      await loadSubscriptionData();
+      Get.snackbar(
+        'Успех',
+        'Подписка оформлена на 30 дней',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } catch (e) {
+      Get.snackbar(
+        'Ошибка',
+        'Не удалось оформить подписку',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isLoading.value = false;
+    }
   }
 
   // Получение последних 4 цифр выбранной карты
@@ -143,4 +328,10 @@ class SubscriptionController extends GetxController {
 
   // Проверка наличия валидных карт
   bool get hasValidCards => validCards.isNotEmpty;
+
+  // Проверка, активна ли подписка
+  bool get isSubscriptionActive => currentSubscription.value?.isSubscriptionActive ?? false;
+
+  // Получение оставшихся дней подписки
+  int get remainingDays => currentSubscription.value?.remainingDays ?? 0;
 } 

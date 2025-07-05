@@ -111,6 +111,7 @@ class CreatingProfileScreenWeb extends StatelessWidget {
               Obx(() => TextFormField(
                 controller: controller.nameController,
                 style: TextStyles.bodyMedium,
+                maxLength: CreatingProfileController.maxNameLength,
                 decoration: InputDecoration(
                   labelText: 'Имя',
                   labelStyle: TextStyles.bodyMedium.copyWith(color: Palette.grey350),
@@ -141,6 +142,7 @@ class CreatingProfileScreenWeb extends StatelessWidget {
                 controller: controller.shortDescriptionController,
                 style: TextStyles.bodyMedium,
                 maxLines: 2,
+                maxLength: CreatingProfileController.maxShortDescriptionLength,
                 decoration: InputDecoration(
                   labelText: 'Специализация (краткое описание)',
                   labelStyle: TextStyles.bodyMedium.copyWith(color: Palette.grey350),
@@ -173,6 +175,7 @@ class CreatingProfileScreenWeb extends StatelessWidget {
                 controller: controller.descriptionController,
                 style: TextStyles.bodyMedium,
                 maxLines: 4,
+                maxLength: CreatingProfileController.maxDescriptionLength,
                 decoration: InputDecoration(
                   labelText: 'Описание (полное)',
                   labelStyle: TextStyles.bodyMedium.copyWith(color: Palette.grey350),

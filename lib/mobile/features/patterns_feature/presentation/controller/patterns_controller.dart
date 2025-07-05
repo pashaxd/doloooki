@@ -3,22 +3,45 @@ import 'package:doloooki/mobile/features/patterns_feature/models/pattern_item.da
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get_rx/src/rx_types/rx_types.dart';
 import 'package:get/get_state_manager/src/simple/get_controllers.dart';
+import 'dart:async';
 
 class PatternsListController extends GetxController {
   final RxList<PatternItem> patterns = <PatternItem>[].obs;
   final RxBool isLoading = false.obs;
+  StreamSubscription<User?>? _authSubscription;
 
   @override
   void onInit() {
     super.onInit();
-    fetchPatterns();
+    
+    // Слушаем изменения состояния авторизации
+    _authSubscription = FirebaseAuth.instance.authStateChanges().listen((user) {
+      if (user == null) {
+        // Пользователь вышел из системы, очищаем данные
+        patterns.clear();
+        isLoading.value = false;
+      } else {
+        // Пользователь вошел в систему, загружаем паттерны
+        fetchPatterns();
+      }
+    });
+  }
+
+  @override
+  void onClose() {
+    _authSubscription?.cancel();
+    super.onClose();
   }
 
   Future<void> fetchPatterns() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      patterns.clear();
+      return;
+    }
+
     isLoading.value = true;
     try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) return;
       final snapshot = await FirebaseFirestore.instance
            .collection('users')
           .doc(user.uid)
@@ -32,6 +55,10 @@ class PatternsListController extends GetxController {
       print(patterns.value);
     } catch (e) {
       print('Ошибка загрузки паттернов: $e');
+      if (e.toString().contains('permission-denied')) {
+        // Если нет прав доступа, очищаем паттерны
+        patterns.clear();
+      }
     } finally {
       isLoading.value = false;
     }
@@ -57,6 +84,9 @@ class PatternsListController extends GetxController {
       patterns.removeWhere((pattern) => pattern.id == patternId);
     } catch (e) {
       print('Ошибка удаления паттерна: $e');
+      if (e.toString().contains('permission-denied')) {
+        patterns.clear();
+      }
       rethrow;
     }
   }

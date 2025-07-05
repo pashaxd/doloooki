@@ -153,20 +153,9 @@ class ChatScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Метка "Request"
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 12.sp, vertical: 6.sp),
-            decoration: BoxDecoration(
-              color: Palette.red100,
-              borderRadius: BorderRadius.circular(12.sp),
-            ),
-            child: Text(
-              'Request',
-              style: TextStyles.labelMedium.copyWith(color: Palette.white100),
-            ),
-          ),
+        
           
-          SizedBox(height: 12.sp),
+        
           
           // Основная карточка с информацией
           Container(

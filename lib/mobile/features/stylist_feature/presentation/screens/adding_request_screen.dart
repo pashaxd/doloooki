@@ -1013,7 +1013,7 @@ class _AddingRequestScreenState extends State<AddingRequestScreen> {
                                     Get.to(()=>BottomNavigation());
                                 } : null,
                                 child: Container(
-                                  height: 50.sp,
+                                  height: 45.sp,
                                   width: double.infinity,
                                   decoration: BoxDecoration(
                                     color: (controller.hasSavedCards.value && 
@@ -1040,7 +1040,7 @@ class _AddingRequestScreenState extends State<AddingRequestScreen> {
                   );
                 } : null,
                 child: Container(
-                  height: 50.sp,
+                  height: 45.sp,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: controller.isRequestReady.value ? Palette.red100 : Palette.red400,

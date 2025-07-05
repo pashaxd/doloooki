@@ -28,31 +28,29 @@ void main() async {
     WidgetsFlutterBinding.ensureInitialized();
     print('Initializing Firebase...');
     
-    // Проверяем, инициализирован ли уже Firebase
+    // Check if Firebase is already initialized
     if (Firebase.apps.isEmpty) {
       print('No Firebase apps found, initializing...');
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
       print('Firebase initialized successfully');
     } else {
-      print('Firebase already initialized');
+      print('Firebase already initialized, using existing app');
     }
     
-    // Настройка персистентности для веба - КРИТИЧЕСКИ ВАЖНО для сохранения сессии
+    // Setup persistence for web - CRITICAL for session persistence
     if (kIsWeb) {
       try {
-        // Устанавливаем персистентность для IndexedDB
         await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-        print('Firebase Auth persistence установлена');
+        print('Firebase Auth persistence set');
       } catch (e) {
         print('Warning: Could not set web persistence: $e');
-        // Продолжаем работу даже если не удалось установить персистентность
       }
     }
     
     print('Firebase apps count: ${Firebase.apps.length}');
     print('Default Firebase app name: ${Firebase.app().name}');
     
-    // Проверяем доступность Firestore
+    // Test Firestore accessibility
     try {
       await FirebaseFirestore.instance.collection('test').limit(1).get();
       print('Firestore is accessible');
@@ -64,9 +62,22 @@ void main() async {
   } catch (e, stackTrace) {
     print('Error initializing Firebase: $e');
     print('Stack trace: $stackTrace');
-    runApp(MaterialApp(
-      home: LoadingScreen(),
-    ));
+    
+    // Handle specific Firebase errors
+    if (e.toString().contains('duplicate-app')) {
+      print('Firebase app already exists, continuing with existing app...');
+      runApp(const MyApp());
+    } else {
+      // Don't use LoadingScreen here as ScreenUtil is not initialized yet
+      runApp(MaterialApp(
+        home: Scaffold(
+          backgroundColor: Colors.red[600],
+          body: const Center(
+            child: CircularProgressIndicator(color: Colors.white),
+          ),
+        ),
+      ));
+    }
   }
 }
 
@@ -76,6 +87,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
+      designSize: const Size(375, 812), // Add design size for ScreenUtil
+      minTextAdapt: true,
+      splitScreenMode: true,
       builder: (_, child) => GetMaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'DOLOOKI',
@@ -102,7 +116,7 @@ class MyApp extends StatelessWidget {
                   return OnboardingScreen();
                 }
 
-                // Проверяем, есть ли профиль пользователя
+                // Check if user profile exists
                 return FutureBuilder<DocumentSnapshot>(
                   future: FirebaseFirestore.instance
                       .collection('users')
@@ -113,12 +127,12 @@ class MyApp extends StatelessWidget {
                       return const Center(child: CircularProgressIndicator());
                     }
 
-                    // Если профиль не существует, показываем экран создания профиля
+                    // If profile doesn't exist, show profile creation screen
                     if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
                       return CreatingProfileScreen();
                     }
 
-                    // Если профиль существует, показываем основной экран
+                    // If profile exists, show main screen
                     return BottomNavigation();
                   },
                 );
@@ -208,11 +222,14 @@ class _WebAuthWrapperState extends State<WebAuthWrapper> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            // Если стилист найден, показываем дашборд
             if (stylistSnapshot.hasData && stylistSnapshot.data!.exists) {
-              if (kDebugMode) {
-                print('✅ Стилист найден, показываем дашборд');
+              final stylistData = stylistSnapshot.data!.data() as Map<String, dynamic>? ?? {};
+              final name = stylistData['name']?.toString().trim() ?? '';
+              if (name.isEmpty) {
+                if (kDebugMode) print('⚠️ Имя стилиста не заполнено, отправляем на создание профиля');
+                return CreatingProfileScreenWeb();
               }
+              if (kDebugMode) print('✅ Стилист найден и имя заполнено, показываем дашборд');
               return LeftNavigationScreen();
             }
 

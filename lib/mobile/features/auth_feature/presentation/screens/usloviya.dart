@@ -1,4 +1,5 @@
 import 'package:doloooki/utils/palette.dart';
+import 'package:doloooki/utils/responsive_utils.dart';
 import 'package:doloooki/utils/text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -20,7 +21,7 @@ class Usloviya extends StatelessWidget {
             centerTitle: true,
             leading: IconButton(
               padding: EdgeInsets.zero,
-              iconSize: 24.sp,
+              iconSize: 24.adaptiveIcon,
               onPressed: Get.back,
               icon: Container(
                 width: 45.sp,
@@ -32,7 +33,7 @@ class Usloviya extends StatelessWidget {
                 child: Icon(
                   Icons.arrow_back_ios_new,
                   color: Palette.white100,
-                  size: 20.sp,
+                  size: 60.adaptiveIcon,
                 ),
               ),
             ),

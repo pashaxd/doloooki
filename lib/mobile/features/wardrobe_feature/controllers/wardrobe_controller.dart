@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'dart:async';
 import 'dart:ui' as ui;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:doloooki/core/presentation/ondoarding/screens/bottom_navigation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -10,7 +11,7 @@ import 'package:get/get.dart';
 import 'package:doloooki/mobile/features/wardrobe_feature/models/clothes_item.dart';
 import 'package:doloooki/mobile/features/wardrobe_feature/service/clothes_service.dart';
 import 'package:doloooki/mobile/features/wardrobe_feature/constants/wardrobe_constants.dart';
-import 'package:local_rembg/local_rembg.dart';
+import 'package:doloooki/mobile/features/wardrobe_feature/service/background_removal_service.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,6 +42,9 @@ class WardrobeController extends GetxController {
   final RxBool hasUnsavedChanges = false.obs;
   ClothesItem? _originalItem;
   String? _editingItemId;
+  
+  // Кеш для результатов обработки фона
+  final Map<String, Uint8List> _backgroundRemovalCache = {};
 
   List<String> get categories => WardrobeConstants.categories;
   List<String> get tags => [...WardrobeConstants.tags, ...customTags];
@@ -126,6 +130,8 @@ class WardrobeController extends GetxController {
   void onClose() {
     // Clear any selected image when controller is closed
     selectedImage.value = null;
+    // Очищаем кеш обработки фона
+    clearBackgroundRemovalCache();
     _clothesSubscription?.cancel();
     _authSubscription?.cancel();
     super.onClose();
@@ -261,6 +267,53 @@ class WardrobeController extends GetxController {
       
       // Перезагружаем данные для синхронизации
       await loadClothes();
+      Get.dialog(
+        AlertDialog(
+          backgroundColor: Palette.red400,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          content: Container(
+            width: 320.sp,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Image.asset(
+                  'assets/icons/notifications/green.png',
+                  width: 60.sp,
+                  height: 60.sp,
+                ),
+                SizedBox(height: 16.sp),
+                Text(
+                  'Одежда добавлена!',
+                  style: TextStyles.titleLarge.copyWith(color: Palette.white100),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8.sp),
+                Text(
+                  'Одежда добавлена и находится в гардеробе',
+                  style: TextStyles.bodyMedium.copyWith(color: Palette.grey350),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 16.sp),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Get.offAll(() =>  BottomNavigation()),
+                    style: ButtonStyles.primary,
+                    child: Text(
+                      'Отлично',
+                      style: TextStyles.buttonSmall.copyWith(color: Palette.white100),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        barrierDismissible: false,
+      );
+      
     } catch (e) {
       print('Error adding clothes: $e');
       rethrow;
@@ -288,51 +341,67 @@ class WardrobeController extends GetxController {
     selectedTags.clear();
   }
 
+  /// Генерирует ключ кеша для файла
+  String _generateCacheKey(File imageFile) {
+    final filePath = imageFile.path;
+    final fileSize = imageFile.lengthSync();
+    final lastModified = imageFile.lastModifiedSync().millisecondsSinceEpoch;
+    return '$filePath-$fileSize-$lastModified';
+  }
+
+  /// Очищает кеш обработки фона
+  void clearBackgroundRemovalCache() {
+    _backgroundRemovalCache.clear();
+    print('🧹 Background removal cache cleared');
+  }
+
   /// Удаляет фон с изображения и возвращает Uint8List с белым фоном
   Future<Uint8List?> removeBackground(File imageFile) async {
     try {
-      return await runZoned(() async {
-        final result = await LocalRembg.removeBackground(
-          imagePath: imageFile.path,
-        );
+      // Генерируем ключ кеша для этого файла
+      final cacheKey = _generateCacheKey(imageFile);
+      
+      // Проверяем, есть ли результат в кеше
+      if (_backgroundRemovalCache.containsKey(cacheKey)) {
+        print('✅ Using cached background removal result');
+        return _backgroundRemovalCache[cacheKey];
+      }
+      
+      print('🔍 Testing API connection before processing...');
+      await BackgroundRemovalService.testApiConnection();
+      
+      print('🚀 Starting background removal...');
+      // Используем новый API pixian.ai вместо local_rembg
+      final processedImageBytes = await BackgroundRemovalService.removeBackground(
+        imageFile,
+        isTest: true, // Тестовый режим для бесплатной обработки с водяным знаком
+      );
+      
+      if (processedImageBytes != null) {
+        print('✅ Image processed successfully, size: ${processedImageBytes.length} bytes');
         
-        if (result.status == 1 && result.imageBytes != null) {
-          // Создаем изображение из байтов
-          final codec = await ui.instantiateImageCodec(Uint8List.fromList(result.imageBytes!));
-          final frame = await codec.getNextFrame();
-          final image = frame.image;
-
-          // Создаем новый canvas с белым фоном
-          final recorder = ui.PictureRecorder();
-          final canvas = ui.Canvas(recorder);
-          
-          // Заполняем фон белым цветом
-          final paint = ui.Paint()..color = Colors.white;
-          canvas.drawRect(
-            Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-            paint
-          );
-          
-          // Рисуем изображение поверх белого фона
-          canvas.drawImage(image, Offset.zero, ui.Paint());
-          
-          // Конвертируем canvas в изображение
-          final picture = recorder.endRecording();
-          final img = await picture.toImage(image.width, image.height);
-          final byteData = await img.toByteData(format: ui.ImageByteFormat.png);
-          
-          return byteData?.buffer.asUint8List();
-        } else {
-          Get.snackbar('Ошибка', result.errorMessage ?? 'Ошибка удаления фона');
-          return null;
-        }
-      }, zoneSpecification: ZoneSpecification(
-        print: (_, __, ___, String msg) {
-          // Suppress all prints during background removal
-        },
-      ));
+        // Сохраняем результат в кеш
+        _backgroundRemovalCache[cacheKey] = processedImageBytes;
+        print('💾 Result cached for future use');
+        
+        // Возвращаем обработанное изображение напрямую без дополнительной обработки canvas
+        return processedImageBytes;
+      } else {
+        print('❌ API failed to process image');
+        Get.snackbar(
+          'Ошибка', 
+          'API не смог обработать изображение. Проверьте подключение к интернету.',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        return null;
+      }
     } catch (e) {
-      Get.snackbar('Ошибка', 'Ошибка удаления фона: $e');
+      print('💥 Background removal controller error: $e');
+      Get.snackbar(
+        'Ошибка', 
+        'Ошибка удаления фона: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return null;
     }
   }
@@ -468,8 +537,8 @@ class WardrobeController extends GetxController {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 800,
+        maxWidth: 2500, // 5MP: 2500x2000 = 5,000,000 пикселей
+        maxHeight: 2000, // 5MP: 2500x2000 = 5,000,000 пикселей
         imageQuality: 70,
       );
       
@@ -499,8 +568,8 @@ class WardrobeController extends GetxController {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
-        maxWidth: 800,
-        maxHeight: 800,
+        maxWidth: 2500, // 5MP: 2500x2000 = 5,000,000 пикселей
+        maxHeight: 2000, // 5MP: 2500x2000 = 5,000,000 пикселей
         imageQuality: 70,
       );
       

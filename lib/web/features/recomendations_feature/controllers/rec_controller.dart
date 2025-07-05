@@ -283,6 +283,144 @@ class RecController extends GetxController with GetSingleTickerProviderStateMixi
     }
   }
 
+  // Создание цветовой палитры
+  Future<void> createColorPalette({
+    required String name,
+    required String description,
+    required List<String> colors,
+    required List<String> combinations,
+  }) async {
+    try {
+      // Валидация данных
+      if (name.trim().isEmpty) {
+        throw Exception('Название палитры не может быть пустым');
+      }
+
+      if (colors.length < 4) {
+        throw Exception('Добавьте минимум 4 цвета');
+      }
+
+      if (combinations.isEmpty) {
+        throw Exception('Добавьте минимум одну комбинацию');
+      }
+
+      // Валидация цветов
+      for (final color in colors) {
+        if (!_isValidHexColor(color)) {
+          throw Exception('Неверный формат цвета: $color');
+        }
+      }
+
+      // Валидация комбинаций
+      for (final combination in combinations) {
+        final colorsList = combination.split(',').map((c) => c.trim()).toList();
+        if (colorsList.length != 4) {
+          throw Exception('Каждая комбинация должна содержать 4 цвета');
+        }
+        
+        for (final color in colorsList) {
+          if (!_isValidHexColor(color)) {
+            throw Exception('Неверный формат цвета в комбинации: $color');
+          }
+        }
+      }
+
+      // Создаем документ в Firestore
+      final paletteDoc = FirebaseFirestore.instance.collection('recColors').doc();
+      
+      await paletteDoc.set({
+        'name': name.trim(),
+        'description': description.trim(),
+        'colors': colors,
+        'combinations': combinations,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      print('✅ Цветовая палитра "$name" успешно создана');
+      
+    } catch (e) {
+      print('❌ Ошибка создания цветовой палитры: $e');
+      rethrow;
+    }
+  }
+
+  // Валидация HEX цвета
+  bool _isValidHexColor(String hexColor) {
+    if (hexColor.isEmpty) return false;
+    
+    // Убираем # если есть
+    final cleanColor = hexColor.replaceAll('#', '');
+    
+    // Проверяем длину (должно быть 6 символов)
+    if (cleanColor.length != 6) return false;
+    
+    // Проверяем, что все символы - валидные hex символы
+    return RegExp(r'^[0-9A-Fa-f]+$').hasMatch(cleanColor);
+  }
+
+  // Получение статистики цветовых палитр
+  Map<String, int> getColorPaletteStats() {
+    int totalColors = 0;
+    int totalCombinations = 0;
+    
+    for (final palette in colorsModels) {
+      totalColors += palette.colors.length;
+      totalCombinations += palette.combinations.length;
+    }
+    
+    return {
+      'palettes': colorsModels.length,
+      'colors': totalColors,
+      'combinations': totalCombinations,
+    };
+  }
+
+  // Поиск палитр по названию
+  List<ColorsModel> searchColorPalettes(String query) {
+    if (query.trim().isEmpty) return colorsModels;
+    
+    final lowercaseQuery = query.toLowerCase();
+    return colorsModels.where((palette) {
+      return palette.name.toLowerCase().contains(lowercaseQuery) ||
+             palette.description.toLowerCase().contains(lowercaseQuery);
+    }).toList();
+  }
+
+  // Проверка, используется ли цвет в палитрах
+  bool isColorUsedInPalettes(String hexColor) {
+    for (final palette in colorsModels) {
+      if (palette.colors.contains(hexColor)) return true;
+      
+      for (final combination in palette.combinations) {
+        if (combination.contains(hexColor)) return true;
+      }
+    }
+    return false;
+  }
+
+  // Получение популярных цветов
+  List<String> getPopularColors({int limit = 10}) {
+    final colorFrequency = <String, int>{};
+    
+    for (final palette in colorsModels) {
+      for (final color in palette.colors) {
+        colorFrequency[color] = (colorFrequency[color] ?? 0) + 1;
+      }
+      
+      for (final combination in palette.combinations) {
+        final colors = combination.split(',').map((c) => c.trim()).toList();
+        for (final color in colors) {
+          colorFrequency[color] = (colorFrequency[color] ?? 0) + 1;
+        }
+      }
+    }
+    
+    final sortedColors = colorFrequency.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    
+    return sortedColors.take(limit).map((entry) => entry.key).toList();
+  }
+
   // Диалог подтверждения удаления
   Future<bool> _showDeleteConfirmationDialog({
     required String title,

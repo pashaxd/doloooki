@@ -205,121 +205,124 @@ class ProfileScreen extends StatelessWidget {
                 onTap: () {
                   Get.bottomSheet(
                     Container(
-                      height: 300.sp,
-                          constraints: BoxConstraints(
-                            maxWidth: 350.sp,
-                            minWidth: 350.sp,
-                          ),
-                          padding: EdgeInsets.symmetric(horizontal: 16.sp, vertical: 16.sp),
-                          decoration: BoxDecoration(
-                            color: Palette.red600,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Column(
-                            
-                            children: [
-                              Center(child: Container(
-                                width: 40.sp,
-                                height: 4.sp,
-                                decoration: BoxDecoration(
-                                  color: Palette.grey350,
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              )),
-                              SizedBox(height: 16.sp),
-                              Column(
-                                
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                              
-                                  Text('О приложении', style: TextStyles.titleLarge.copyWith(color: Palette.white100)),
-                                  SizedBox(height: 16.sp),
-                            Container(
-                              width: double.infinity,
-                              height: 200,
-                              padding: EdgeInsets.all(10.sp),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(20),
-                                color: Palette.red400,
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
-                                        width: 40.sp,
-                                        height: 40.sp,
-                                        decoration: BoxDecoration(
-                                          color: Palette.red200,
-                                          borderRadius: BorderRadius.circular(12.sp),
-                                        ),
-                                        child: Container(
-                                          padding: EdgeInsets.all(8.sp),
-                                          child: SvgPicture.asset('assets/icons/profile/version.svg', width: 20.sp, height: 20.sp)),
-                                      ),
-                                      SizedBox(width: 12.sp),
-                                      Text('Версия приложения ', style: TextStyles.titleSmall),
-                                      Spacer(),
-                                      Text('v1.0', style: TextStyles.titleSmall.copyWith(color: Palette.white100)),
-                                    ],
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Get.to(() => Usloviya());
-                                    },
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 40.sp,
-                                          height: 40.sp,
-                                          decoration: BoxDecoration(
-                                            color: Palette.red200,
-                                            borderRadius: BorderRadius.circular(12.sp),
-                                          ),
-                                          child: Container(
-                                            padding: EdgeInsets.all(8.sp),
-                                            child: SvgPicture.asset('assets/icons/profile/usloviya.svg', width: 20.sp, height: 20.sp)),
-                                        ),
-                                        SizedBox(width: 12.sp),
-                                        Text('Условия использования', style: TextStyles.titleSmall),
-                                        Spacer(),
-                                        Icon(Icons.arrow_forward_ios, color: Palette.white100, size: 15.sp),
-                                      ],
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () {
-                                      Get.to(() => Usloviya());
-                                    },
-                                    child: Row(
-                                      children: [
-                                        Container(
-                                          width: 40.sp,
-                                          height: 40.sp,
-                                          decoration: BoxDecoration(
-                                            color: Palette.red200,
-                                            borderRadius: BorderRadius.circular(12.sp),
-                                          ),
-                                          child: Container(
-                                            padding: EdgeInsets.all(8.sp),
-                                            child: SvgPicture.asset('assets/icons/profile/usloviya.svg', width: 20.sp, height: 20.sp)),
-                                        ),
-                                        SizedBox(width: 12.sp),
-                                        Text('Политика конфиденциальности', style: TextStyles.titleSmall),
-                                        Spacer(),
-                                        Icon(Icons.arrow_forward_ios, color: Palette.white100, size: 15.sp),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                      constraints: BoxConstraints(
+                        maxWidth: 350.sp,
+                        minWidth: 350.sp,
+                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 16.sp, vertical: 16.sp),
+                      decoration: BoxDecoration(
+                        color: Palette.red600,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Center(child: Container(
+                            width: 40.sp,
+                            height: 4.sp,
+                            decoration: BoxDecoration(
+                              color: Palette.grey350,
+                              borderRadius: BorderRadius.circular(20),
                             ),
-                            SizedBox(height: 16.sp),
-                            
+                          )),
+                          SizedBox(height: 16.sp),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('О приложении', style: TextStyles.titleLarge.copyWith(color: Palette.white100)),
+                              SizedBox(height: 16.sp),
+                              Container(
+                                width: double.infinity,
+                                height: 200,
+                                padding: EdgeInsets.all(10.sp),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Palette.red400,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Container(
+                                          width: 40.sp,
+                                          height: 40.sp,
+                                          decoration: BoxDecoration(
+                                            color: Palette.red200,
+                                            borderRadius: BorderRadius.circular(12.sp),
+                                          ),
+                                          child: Container(
+                                            padding: EdgeInsets.all(8.sp),
+                                            child: SvgPicture.asset('assets/icons/profile/version.svg', width: 20.sp, height: 20.sp)
+                                          ),
+                                        ),
+                                        SizedBox(width: 12.sp),
+                                        Text('Версия приложения ', style: TextStyles.titleSmall),
+                                        Spacer(),
+                                        Text('v1.0', style: TextStyles.titleSmall.copyWith(color: Palette.white100)),
+                                      ],
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Get.to(() => Usloviya());
+                                      },
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 40.sp,
+                                            height: 40.sp,
+                                            decoration: BoxDecoration(
+                                              color: Palette.red200,
+                                              borderRadius: BorderRadius.circular(12.sp),
+                                            ),
+                                            child: Container(
+                                              padding: EdgeInsets.all(8.sp),
+                                              child: SvgPicture.asset('assets/icons/profile/usloviya.svg', width: 20.sp, height: 20.sp)
+                                            ),
+                                          ),
+                                          SizedBox(width: 12.sp),
+                                          Text('Условия использования', style: TextStyles.titleSmall),
+                                          Spacer(),
+                                          Icon(Icons.arrow_forward_ios, color: Palette.white100, size: 15.sp),
+                                        ],
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () {
+                                        Get.to(() => Usloviya());
+                                      },
+                                      child: Row(
+                                        children: [
+                                          Container(
+                                            width: 40.sp,
+                                            height: 40.sp,
+                                            decoration: BoxDecoration(
+                                              color: Palette.red200,
+                                              borderRadius: BorderRadius.circular(12.sp),
+                                            ),
+                                            child: Container(
+                                              padding: EdgeInsets.all(8.sp),
+                                              child: SvgPicture.asset('assets/icons/profile/usloviya.svg', width: 20.sp, height: 20.sp)
+                                            ),
+                                          ),
+                                          SizedBox(width: 12.sp),
+                                          Text('Политика конфиденциальности', style: TextStyles.titleSmall),
+                                          Spacer(),
+                                          Icon(Icons.arrow_forward_ios, color: Palette.white100, size: 15.sp),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 16.sp),
                             ],
-                          )])));
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
                 },
                  child: Container(
                   margin: EdgeInsets.symmetric(horizontal: 12.sp),

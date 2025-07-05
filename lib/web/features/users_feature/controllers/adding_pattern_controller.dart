@@ -291,35 +291,37 @@ class WebPatternEditorController extends GetxController {
             borderRadius: BorderRadius.circular(20),
           ),
           content: Container(
-            width: 150.sp,
+            padding: EdgeInsets.all(20.adaptiveSpacing),
+            width: 100.w,
 
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Image.asset(
                   'assets/icons/notifications/green.png',
-                  width: 60.sp,
-                  height: 60.sp,
+                  width: 150.adaptiveIcon,
+                  height: 150.adaptiveIcon,
                 ),
-                SizedBox(height: 8.adaptiveSpacing),
+                SizedBox(height: 30.adaptiveSpacing),
                 Text(
                   'Образ создан!',
                   style: TextStyles.titleLarge.copyWith(color: Palette.white100),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 8.sp),
+                SizedBox(height: 30.adaptiveSpacing),
                 Text(
-                  'Теперь вы можете найти его в разделе «Мои образы», отредактировать или поделиться с друзьями',
+                  'Образ перемещен в раздел "Образы" пользователя',
                   style: TextStyles.bodyMedium.copyWith(color: Palette.grey350),
                   textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 8.adaptiveSpacing),
+                SizedBox(height: 30.adaptiveSpacing),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
                       print('🔘 Нажата кнопка "Продолжить" в диалоге');
                       Get.back(); // Закрываем диалог
+                      Get.back();
                       // Обновляем информацию о пользователе, чтобы новый образ отобразился
                       try {
                         final userInfoController = Get.find<UserInfoController>();

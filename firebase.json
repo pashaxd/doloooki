@@ -29,16 +29,5 @@
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
-  },
-  "apphosting": {
-    "source": ".",
-    "run": {
-      "cpu": 1,
-      "memory": "512MiB",
-      "maxInstances": 10,
-      "env": {
-        "NODE_ENV": "production"
-      }
-    }
   }
 }

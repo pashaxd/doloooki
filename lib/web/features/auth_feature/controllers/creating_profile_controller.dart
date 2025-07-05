@@ -20,6 +20,11 @@ class CreatingProfileController extends GetxController {
   final isLoading = false.obs;
   final selectedImagePath = ''.obs;
   
+  // Ограничение по символам
+  static const int maxNameLength = 25;
+  static const int maxShortDescriptionLength = 50;
+  static const int maxDescriptionLength = 250;
+  
   // Firebase instances
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -46,15 +51,17 @@ class CreatingProfileController extends GetxController {
   }
 
   void _validateName() {
-    isNameValid.value = nameController.text.trim().isNotEmpty;
+    isNameValid.value = nameController.text.trim().isNotEmpty && nameController.text.trim().length <= maxNameLength;
   }
 
   void _validateShortDescription() {
-    isShortDescriptionValid.value = shortDescriptionController.text.trim().isNotEmpty;
+    isShortDescriptionValid.value = shortDescriptionController.text.trim().isNotEmpty && 
+                                    shortDescriptionController.text.trim().length <= maxShortDescriptionLength;
   }
 
   void _validateDescription() {
-    isDescriptionValid.value = descriptionController.text.trim().isNotEmpty;
+    isDescriptionValid.value = descriptionController.text.trim().isNotEmpty && 
+                               descriptionController.text.trim().length <= maxDescriptionLength;
   }
 
   bool get isFormValid => isNameValid.value && 

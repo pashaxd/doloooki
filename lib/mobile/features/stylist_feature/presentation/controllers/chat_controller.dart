@@ -359,7 +359,7 @@ class ChatController extends GetxController {
             Text('Комментарий', style: TextStyles.titleSmall.copyWith(color: isReviewFocused.value ? Palette.white100 : Palette.grey100)),
             SizedBox(height: 10.sp),
             Container(
-              height: 100.sp,
+              height: 60.sp,
               width: double.infinity,
               decoration: BoxDecoration(
                 color: Palette.red400,
@@ -377,15 +377,15 @@ class ChatController extends GetxController {
                   },
                   focusNode: reviewFocusNode,
                   controller: reviewController,
-                  maxLength: 200,
+                  maxLength: 50,
                   style: TextStyles.bodyMedium.copyWith(color: Palette.white100),
-                  maxLines: 3,
+                  maxLines: 2,
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     focusedBorder: InputBorder.none,
                     enabledBorder: InputBorder.none,
                     hintStyle: TextStyles.bodyMedium.copyWith(color: Palette.grey200),
-                    hintText: 'Расскажите о вашем опыте консультации',
+                    hintText: 'Расскажите о своем опыте работы со стилистом...',
                     counterText: '',
                   ),
                 ),
@@ -394,7 +394,7 @@ class ChatController extends GetxController {
             Align(
               alignment: Alignment.centerRight,
               child: Text(
-                '${reviewText.value.length}/200',
+                '${reviewText.value.length}/50',
                 style: TextStyles.labelSmall.copyWith(color: Palette.grey350),
               ),
             ),
@@ -418,7 +418,7 @@ class ChatController extends GetxController {
                     ? CircularProgressIndicator(color: Palette.white100)
                     : Text(
                         'Отправить оценку',
-                        style: TextStyles.titleMedium.copyWith(color: Palette.white100),
+                        style: TextStyles.titleMedium.copyWith(color:canSubmitReview() ? Palette.white100 : Palette.grey350),
                       ),
                 ),
               ),

@@ -1,37 +1,43 @@
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Flutter Web (Chrome)",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "deviceId": "chrome",
-            "args": [
-                "--web-port=8080"
-            ]
-        },
-        {
-            "name": "Flutter Web Debug",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "deviceId": "chrome",
-            "args": [
-                "--web-port=8080",
-                "--debug"
-            ]
-        },
-        {
-            "name": "Flutter Web Release",
-            "request": "launch",
-            "type": "dart",
-            "program": "lib/main.dart",
-            "deviceId": "chrome",
-            "args": [
-                "--web-port=8080",
-                "--release"
-            ]
-        }
-    ]
-} 
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "Flutter (Default Device)",
+//             "request": "launch",
+//             "type": "dart",
+//             "program": "lib/main.dart"
+//         },
+//         {
+//             "name": "Flutter Web (Chrome)",
+//             "request": "launch",
+//             "type": "dart",
+//             "program": "lib/main.dart",
+//             "deviceId": "chrome",
+//             "args": [
+//                 "--web-port=8080"
+//             ]
+//         },
+//         {
+//             "name": "Flutter Web Debug",
+//             "request": "launch",
+//             "type": "dart",
+//             "program": "lib/main.dart",
+//             "deviceId": "chrome",
+//             "args": [
+//                 "--web-port=8080",
+//                 "--debug"
+//             ]
+//         },
+//         {
+//             "name": "Flutter Web Release",
+//             "request": "launch",
+//             "type": "dart",
+//             "program": "lib/main.dart",
+//             "deviceId": "chrome",
+//             "args": [
+//                 "--web-port=8080",
+//                 "--release"
+//             ]
+//         }
+//     ]
+// } 
