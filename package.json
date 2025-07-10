@@ -1,0 +1,21 @@
+{
+  "name": "doloooki-web",
+  "version": "1.0.0",
+  "description": "Doloooki Flutter Web App",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "build": "cp -r build/web/* public/ 2>/dev/null || echo 'Flutter build not found, using existing public files'",
+    "dev": "node index.js",
+    "flutter:build": "flutter build web && cp -r build/web/* public/"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "keywords": ["flutter", "web", "firebase"],
+  "author": "Doloooki Team",
+  "license": "MIT"
+} 
