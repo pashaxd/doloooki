@@ -26,11 +26,39 @@ class WebImageWidget extends StatelessWidget {
     this.isCircular = false,
   }) : super(key: key);
 
+  // Автоматическая замена URL старого проекта на новый
+  String _fixFirebaseUrl(String originalUrl) {
+    // Заменяем старый проект на новый
+    if (originalUrl.contains('dolooki-fb888.firebasestorage.app')) {
+      final fixedUrl = originalUrl.replaceAll(
+        'dolooki-fb888.firebasestorage.app',
+        'dolooki-2c346.firebasestorage.app'
+      );
+      print('🔧 Fixed URL: $originalUrl -> $fixedUrl');
+      return fixedUrl;
+    }
+    
+    // Также проверяем старый домен googleapis.com
+    if (originalUrl.contains('firebasestorage.googleapis.com/v0/b/dolooki-fb888.firebasestorage.app')) {
+      final fixedUrl = originalUrl.replaceAll(
+        'firebasestorage.googleapis.com/v0/b/dolooki-fb888.firebasestorage.app',
+        'firebasestorage.googleapis.com/v0/b/dolooki-2c346.firebasestorage.app'
+      );
+      print('🔧 Fixed googleapis URL: $originalUrl -> $fixedUrl');
+      return fixedUrl;
+    }
+    
+    return originalUrl;
+  }
+
   Future<String> _getFirebaseUrl(String originalUrl) async {
     try {
+      // Сначала исправляем URL
+      final fixedUrl = _fixFirebaseUrl(originalUrl);
+      
       // Если это Firebase Storage URL, попробуем получить свежий download URL
-      if (originalUrl.contains('firebasestorage.googleapis.com')) {
-        final uri = Uri.parse(originalUrl);
+      if (fixedUrl.contains('firebasestorage.googleapis.com')) {
+        final uri = Uri.parse(fixedUrl);
         final pathSegments = uri.pathSegments;
         
         // Извлекаем путь файла из URL
@@ -46,11 +74,11 @@ class WebImageWidget extends StatelessWidget {
         }
       }
       
-      // Если не удалось извлечь путь, возвращаем оригинальный URL
-      return originalUrl;
+      // Если не удалось извлечь путь, возвращаем исправленный URL
+      return fixedUrl;
     } catch (e) {
       print('❌ Error getting Firebase URL: $e');
-      return originalUrl;
+      return _fixFirebaseUrl(originalUrl); // Возвращаем хотя бы исправленный URL
     }
   }
 

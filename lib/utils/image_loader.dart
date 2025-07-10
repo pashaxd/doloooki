@@ -1,9 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:html' as html;
-import 'package:flutter/foundation.dart' show kIsWeb;
 
-class FirebaseImageLoader {
+class ImageLoader {
+  // Автоматическая замена URL старого проекта на новый
+  static String _fixFirebaseUrl(String imageUrl) {
+    // Заменяем старый проект на новый
+    if (imageUrl.contains('dolooki-fb888.firebasestorage.app')) {
+      final fixedUrl = imageUrl.replaceAll(
+        'dolooki-fb888.firebasestorage.app',
+        'dolooki-2c346.firebasestorage.app'
+      );
+      print('🔧 Fixed URL: $imageUrl -> $fixedUrl');
+      return fixedUrl;
+    }
+    
+    // Также проверяем старый домен googleapis.com
+    if (imageUrl.contains('firebasestorage.googleapis.com/v0/b/dolooki-fb888.firebasestorage.app')) {
+      final fixedUrl = imageUrl.replaceAll(
+        'firebasestorage.googleapis.com/v0/b/dolooki-fb888.firebasestorage.app',
+        'firebasestorage.googleapis.com/v0/b/dolooki-2c346.firebasestorage.app'
+      );
+      print('🔧 Fixed googleapis URL: $imageUrl -> $fixedUrl');
+      return fixedUrl;
+    }
+    
+    return imageUrl;
+  }
+
   static Widget loadImage({
     required String imageUrl,
     required double width,
@@ -17,12 +43,18 @@ class FirebaseImageLoader {
       return errorWidget ?? _defaultErrorWidget(width, height);
     }
 
-    // Логирование для отладки
-    print('🖼️ Loading image: ${debugName ?? 'unknown'} -> $imageUrl');
+    // Исправляем URL перед загрузкой
+    final fixedUrl = _fixFirebaseUrl(imageUrl);
+
+    // Debug информация
+    if (debugName != null) {
+      print('🔄 Loading image: $debugName');
+      print('🌐 Final URL for $debugName: $fixedUrl');
+    }
 
     if (kIsWeb) {
       return _loadWebImage(
-        imageUrl: imageUrl,
+        imageUrl: fixedUrl,
         width: width,
         height: height,
         fit: fit,
@@ -32,7 +64,7 @@ class FirebaseImageLoader {
       );
     } else {
       return _loadMobileImage(
-        imageUrl: imageUrl,
+        imageUrl: fixedUrl,
         width: width,
         height: height,
         fit: fit,
