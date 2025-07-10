@@ -233,6 +233,7 @@ class PatternInfo extends StatelessWidget {
                       width: Consts.screenWidth(context)*0.9,
                       height: Consts.screenHeight(context)*0.5,
                       fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Icon(Icons.image, size: 60),
                     ),
                   ),
                 ),
@@ -294,7 +295,13 @@ class PatternInfo extends StatelessWidget {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(20),
-                                child: Image.network(item['imageUrl'], width: Consts.screenWidth(context)*0.3, height: Consts.screenHeight(context)*0.2, fit: BoxFit.cover,),
+                                child: Image.network(
+                                  item['imageUrl'],
+                                  width: Consts.screenWidth(context)*0.3,
+                                  height: Consts.screenHeight(context)*0.2,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Icon(Icons.image, size: 60),
+                                ),
                               ),
                               SizedBox(height: 10,),
                               Text(item['name'], style: TextStyles.titleSmall.copyWith(color: Palette.white100)),

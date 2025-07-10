@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'dart:html' as html;
 
 class ImageLoader {
   // Автоматическая замена URL старого проекта на новый
-  static String _fixFirebaseUrl(String imageUrl) {
+  static String fixFirebaseUrl(String imageUrl) {
     // Заменяем старый проект на новый
     if (imageUrl.contains('dolooki-fb888.firebasestorage.app')) {
       final fixedUrl = imageUrl.replaceAll(
@@ -44,7 +43,7 @@ class ImageLoader {
     }
 
     // Исправляем URL перед загрузкой
-    final fixedUrl = _fixFirebaseUrl(imageUrl);
+    final fixedUrl = fixFirebaseUrl(imageUrl);
 
     // Debug информация
     if (debugName != null) {

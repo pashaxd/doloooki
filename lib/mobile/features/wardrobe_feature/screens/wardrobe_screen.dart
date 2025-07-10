@@ -226,6 +226,7 @@ class WardrobeScreen extends StatelessWidget {
                                           width: Consts.screenWidth(context)*0.3,
                                           height: Consts.screenHeight(context)*0.2,
                                           fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) => Icon(Icons.image, size: 60),
                                         ),
                                       ),
                                       SizedBox(height: 10),

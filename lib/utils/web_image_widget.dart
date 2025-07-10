@@ -28,24 +28,22 @@ class WebImageWidget extends StatelessWidget {
 
   // Автоматическая замена URL старого проекта на новый
   String _fixFirebaseUrl(String originalUrl) {
-    // Заменяем старый проект на новый
+    // Исправляем URL если это старый проект
     if (originalUrl.contains('dolooki-fb888.firebasestorage.app')) {
-      final fixedUrl = originalUrl.replaceAll(
+      originalUrl = originalUrl.replaceAll(
         'dolooki-fb888.firebasestorage.app',
         'dolooki-2c346.firebasestorage.app'
       );
-      print('🔧 Fixed URL: $originalUrl -> $fixedUrl');
-      return fixedUrl;
+      print('🔧 Fixed image URL from fb888 to 2c346');
     }
     
-    // Также проверяем старый домен googleapis.com
+    // Также для старого домена googleapis.com
     if (originalUrl.contains('firebasestorage.googleapis.com/v0/b/dolooki-fb888.firebasestorage.app')) {
-      final fixedUrl = originalUrl.replaceAll(
+      originalUrl = originalUrl.replaceAll(
         'firebasestorage.googleapis.com/v0/b/dolooki-fb888.firebasestorage.app',
         'firebasestorage.googleapis.com/v0/b/dolooki-2c346.firebasestorage.app'
       );
-      print('🔧 Fixed googleapis URL: $originalUrl -> $fixedUrl');
-      return fixedUrl;
+      print('🔧 Fixed googleapis URL from fb888 to 2c346');
     }
     
     return originalUrl;
@@ -139,7 +137,10 @@ class WebImageWidget extends StatelessWidget {
         },
       );
     } else {
-      // Для мобильных используем CachedNetworkImage
+      // Для мобильных используем CachedNetworkImage с исправленным URL
+      final fixedUrl = _fixFirebaseUrl(imageUrl);
+      print('📱 Mobile image URL fixed: ${debugName ?? "unknown"} -> $fixedUrl');
+      
       Widget imageWidget = CachedNetworkImage(
         imageUrl: imageUrl,
         width: displayWidth,
