@@ -21,8 +21,8 @@ class PatternsListController extends GetxController {
         patterns.clear();
         isLoading.value = false;
       } else {
-        // Пользователь вошел в систему, загружаем паттерны
-        fetchPatterns();
+        // Пользователь вошел в систему, загружаем паттерны с задержкой
+        _fetchPatternsWithDelay();
       }
     });
   }
@@ -61,6 +61,28 @@ class PatternsListController extends GetxController {
       }
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _fetchPatternsWithDelay() async {
+    // Ждем 500мс для синхронизации Firebase Auth токена с Firestore
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    try {
+      await fetchPatterns();
+    } catch (e) {
+      print('⚠️ Ошибка загрузки паттернов: $e');
+      if (e.toString().contains('permission-denied')) {
+        // Повторная попытка через секунду
+        await Future.delayed(Duration(seconds: 1));
+        try {
+          await fetchPatterns();
+        } catch (e2) {
+          print('⚠️ Повторная попытка загрузки паттернов также не удалась: $e2');
+          patterns.clear();
+          isLoading.value = false;
+        }
+      }
     }
   }
 

@@ -27,8 +27,8 @@ class RecomendationsController extends GetxController {
         isLoading.value = false;
         error.value = '';
       } else {
-        // Пользователь вошел в систему, загружаем рекомендации
-        loadPopularModels();
+        // Пользователь вошел в систему, загружаем рекомендации с задержкой
+        _loadPopularModelsWithDelay();
       }
     });
   }
@@ -90,6 +90,26 @@ class RecomendationsController extends GetxController {
       }
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadPopularModelsWithDelay() async {
+    // Ждем 500мс для синхронизации Firebase Auth токена с Firestore
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    try {
+      loadPopularModels();
+    } catch (e) {
+      print('⚠️ Ошибка загрузки рекомендаций: $e');
+      if (e.toString().contains('permission-denied')) {
+        // Повторная попытка через секунду
+        await Future.delayed(Duration(seconds: 1));
+        try {
+          loadPopularModels();
+        } catch (e2) {
+          print('⚠️ Повторная попытка загрузки рекомендаций также не удалась: $e2');
+        }
+      }
     }
   }
 } 

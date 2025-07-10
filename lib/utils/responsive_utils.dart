@@ -32,8 +32,8 @@ class ResponsiveUtils {
   static double iconSize(double size) => adaptSize(
     size,
     wideCoeff: 0.4,
-    mediumCoeff: 0.6,
-    narrowCoeff: 0.9,
+    mediumCoeff: 0.5,
+    narrowCoeff: 0.6,
   );
   
   // Для отступов и padding

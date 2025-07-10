@@ -26,54 +26,196 @@ import 'firebase_options.dart';
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
-    print('Initializing Firebase...');
+    print('🚀 Initializing Firebase...');
     
     // Check if Firebase is already initialized
     if (Firebase.apps.isEmpty) {
-      print('No Firebase apps found, initializing...');
+      print('📱 No Firebase apps found, initializing...');
       await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-      print('Firebase initialized successfully');
+      print('✅ Firebase initialized successfully');
     } else {
-      print('Firebase already initialized, using existing app');
+      print('♻️ Firebase already initialized, using existing app');
     }
     
     // Setup persistence for web - CRITICAL for session persistence
     if (kIsWeb) {
       try {
         await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
-        print('Firebase Auth persistence set');
+        print('🌐 Firebase Auth persistence set for web');
       } catch (e) {
-        print('Warning: Could not set web persistence: $e');
+        print('⚠️ Warning: Could not set web persistence: $e');
       }
     }
     
-    print('Firebase apps count: ${Firebase.apps.length}');
-    print('Default Firebase app name: ${Firebase.app().name}');
+    print('📊 Firebase apps count: ${Firebase.apps.length}');
+    print('🏷️ Default Firebase app name: ${Firebase.app().name}');
+    print('🔑 Project ID: ${Firebase.app().options.projectId}');
     
-    // Test Firestore accessibility
+    // Test Firebase Auth with detailed token info
     try {
-      await FirebaseFirestore.instance.collection('test').limit(1).get();
-      print('Firestore is accessible');
+      print('🔐 Testing Firebase Auth...');
+      final currentUser = FirebaseAuth.instance.currentUser;
+      print('👤 Current user: ${currentUser?.uid ?? "not authenticated"}');
+      
+      if (currentUser != null) {
+        print('📧 User email: ${currentUser.email}');
+        print('✅ User email verified: ${currentUser.emailVerified}');
+        print('🔄 User anonymous: ${currentUser.isAnonymous}');
+        
+        // Get ID token to check claims
+        try {
+          final idToken = await currentUser.getIdToken();
+          if (idToken != null) {
+            print('🎫 ID Token: ${idToken.length > 50 ? idToken.substring(0, 50) : idToken}...');
+          } else {
+            print('🎫 ID Token: null');
+          }
+          
+          final tokenResult = await currentUser.getIdTokenResult();
+          print('🔒 Token claims: ${tokenResult.claims}');
+          print('🕐 Token issued at: ${tokenResult.issuedAtTime}');
+          print('⏰ Token expires at: ${tokenResult.expirationTime}');
+          
+        } catch (e) {
+          print('❌ Error getting ID token: $e');
+        }
+      }
     } catch (e) {
-      print('Error accessing Firestore: $e');
+      print('❌ Error with Firebase Auth: $e');
     }
     
+    // Test Firestore accessibility with better error handling
+    try {
+      print('🔍 Testing Firestore accessibility...');
+      // Тест 1: Простое чтение коллекции с детальной ошибкой
+      print('📝 Test 1: Reading collection...');
+      try {
+        final querySnapshot = await FirebaseFirestore.instance
+            .collection('test')
+            .limit(1)
+            .get(const GetOptions(source: Source.server));
+        print('✅ Firestore collection read successful! Documents: ${querySnapshot.docs.length}');
+      } catch (e) {
+        print('❌ Firestore read error: $e');
+        
+        // Попробуем получить более детальную ошибку
+        if (e.toString().contains('PERMISSION_DENIED')) {
+          print('🚫 Permission denied - checking auth state...');
+          final user = FirebaseAuth.instance.currentUser;
+          if (user == null) {
+            print('❌ User is not authenticated');
+          } else {
+            print('✅ User is authenticated: ${user.uid}');
+            print('📧 User email: ${user.email}');
+            print('✅ Email verified: ${user.emailVerified}');
+          }
+        }
+        
+        // Попробуем другой подход - создать документ напрямую
+        print('📝 Test 1b: Trying to create document directly...');
+        try {
+          await FirebaseFirestore.instance
+              .collection('debug')
+              .doc('test')
+              .set({
+            'message': 'Debug test',
+            'timestamp': FieldValue.serverTimestamp(),
+            'user': FirebaseAuth.instance.currentUser?.uid ?? 'anonymous'
+          });
+          print('✅ Document creation successful!');
+        } catch (createError) {
+          print('❌ Document creation failed: $createError');
+          
+          // Если все тесты проваливаются, попробуем выйти и войти заново
+          print('🔄 Attempting to sign out and sign in again...');
+          try {
+            await FirebaseAuth.instance.signOut();
+            print('✅ Signed out successfully');
+            
+            // Войдём анонимно для тестирования
+            final userCredential = await FirebaseAuth.instance.signInAnonymously();
+            print('✅ Signed in anonymously: ${userCredential.user?.uid}');
+            
+            // Попробуем создать документ снова
+            await FirebaseFirestore.instance
+                .collection('debug')
+                .doc('test_new_user')
+                .set({
+              'message': 'Test with new anonymous user',
+              'timestamp': FieldValue.serverTimestamp(),
+              'user': userCredential.user?.uid ?? 'anonymous_new'
+            });
+            print('✅ Firestore works with new user!');
+            
+          } catch (authError) {
+            print('❌ Auth reset failed: $authError');
+          }
+        }
+      }
+      
+    } catch (e) {
+      print('❌ Error accessing Firestore: $e');
+      // Дополнительная диагностика
+      print('🔍 Additional diagnostics:');
+      print('   - Current user: ${FirebaseAuth.instance.currentUser?.uid ?? "Not signed in"}');
+      print('   - App name: ${Firebase.app().name}');
+      print('   - Project ID: ${Firebase.app().options.projectId}');
+    }
+
     runApp(const MyApp());
   } catch (e, stackTrace) {
-    print('Error initializing Firebase: $e');
-    print('Stack trace: $stackTrace');
+    print('💥 Error initializing Firebase: $e');
+    print('📚 Stack trace: $stackTrace');
     
     // Handle specific Firebase errors
     if (e.toString().contains('duplicate-app')) {
-      print('Firebase app already exists, continuing with existing app...');
+      print('🔄 Firebase app already exists, continuing with existing app...');
       runApp(const MyApp());
+    } else if (e.toString().contains('network')) {
+      print('🌐 Network error - please check your internet connection');
+      runApp(MaterialApp(
+        home: Scaffold(
+          backgroundColor: Colors.orange[600],
+          body: const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.wifi_off, size: 64, color: Colors.white),
+                SizedBox(height: 16),
+                Text(
+                  'Проблема с подключением к интернету',
+                  style: TextStyle(color: Colors.white, fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ));
     } else {
       // Don't use LoadingScreen here as ScreenUtil is not initialized yet
       runApp(MaterialApp(
         home: Scaffold(
           backgroundColor: Colors.red[600],
-          body: const Center(
-            child: CircularProgressIndicator(color: Colors.white),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const CircularProgressIndicator(color: Colors.white),
+                const SizedBox(height: 16),
+                Text(
+                  'Ошибка инициализации Firebase',
+                  style: const TextStyle(color: Colors.white, fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  e.toString(),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         ),
       ));

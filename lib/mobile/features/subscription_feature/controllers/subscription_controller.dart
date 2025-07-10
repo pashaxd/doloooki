@@ -44,8 +44,8 @@ class SubscriptionController extends GetxController {
         needsSubscription.value = false;
         hasUsedTrial.value = false;
       } else {
-        // Пользователь вошел в систему, загружаем данные
-        loadUserData();
+        // Пользователь вошел в систему, загружаем данные с задержкой
+        _loadUserDataWithDelay();
       }
     });
 
@@ -88,9 +88,9 @@ class SubscriptionController extends GetxController {
       needsSubscription.value = needsSub;
       
       // Если нужна подписка, показываем окно подписки
-      if (needsSub) {
-        showSubscriptionDialog();
-      }
+      // if (needsSub) {
+      //   showSubscriptionDialog();
+      // }
     } catch (e) {
       print('Error loading subscription data: $e');
     }
@@ -129,6 +129,27 @@ class SubscriptionController extends GetxController {
         selectedCard.value = null;
       },
     );
+  }
+
+  // Загрузка данных пользователя с задержкой
+  Future<void> _loadUserDataWithDelay() async {
+    // Ждем 500мс для синхронизации Firebase Auth токена с Firestore
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    try {
+      await loadUserData();
+    } catch (e) {
+      print('⚠️ Ошибка загрузки данных пользователя: $e');
+      if (e.toString().contains('permission-denied')) {
+        // Повторная попытка через секунду
+        await Future.delayed(Duration(seconds: 1));
+        try {
+          await loadUserData();
+        } catch (e2) {
+          print('⚠️ Повторная попытка загрузки данных пользователя также не удалась: $e2');
+        }
+      }
+    }
   }
 
   // Показать диалог подписки

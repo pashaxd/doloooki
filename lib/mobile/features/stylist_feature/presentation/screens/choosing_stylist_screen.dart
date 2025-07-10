@@ -247,19 +247,14 @@ class ChoosingStylistScreen extends StatelessWidget {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Row(
-                                      children: [
+                                   
                                         Text(
                                           '${stylist.name}',
                                           style: TextStyles.titleMedium.copyWith(color: Palette.white100),
                                         ),
-                                        SizedBox(width: 4.sp),
-                                        Text(
-                                          '(${stylist.shortDescription})',
-                                          style: TextStyles.titleSmall.copyWith(color: Palette.grey350),
-                                        ),
-                                      ],
-                                    ),
+                                        
+                                     
+                                    
                                     Row(
                                       children: [
                                         Text(

@@ -33,6 +33,7 @@ class NotificationsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(NotificationsController());
+    controller.markAllAsRead();
     return Container(
       color: Palette.red600,
       child: SafeArea(
@@ -126,7 +127,7 @@ class NotificationsScreen extends StatelessWidget {
               separatorBuilder: (_, __) => SizedBox(height: 12.sp),
               itemBuilder: (context, i) {
                 final n = notifs[i];
-                final isNew = n.type == 'new'; // или любая ваша логика
+                final isNew = !n.isRead;
                 return Container(
                   width: double.infinity,
                   decoration: BoxDecoration(

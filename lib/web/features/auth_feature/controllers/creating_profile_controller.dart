@@ -21,7 +21,7 @@ class CreatingProfileController extends GetxController {
   final selectedImagePath = ''.obs;
   
   // Ограничение по символам
-  static const int maxNameLength = 25;
+  static const int maxNameLength = 20;
   static const int maxShortDescriptionLength = 50;
   static const int maxDescriptionLength = 250;
   

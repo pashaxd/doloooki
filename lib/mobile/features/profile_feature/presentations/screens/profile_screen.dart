@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import '../controllers/notifications_controller.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -173,20 +174,43 @@ class ProfileScreen extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    Container(
-                      height: 36.sp,
-                      width: 36.sp,
-                      decoration: BoxDecoration(
-                        color: Palette.red200,
-                        borderRadius: BorderRadius.circular(12.sp),
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/profile/notifs.svg',
-                          width: 20.sp,
-                          height: 20.sp,
-                        ),
-                      ),
+                    GetX<NotificationsController>(
+                      builder: (notifCtrl) {
+                        final badge = notifCtrl.unreadCount.value > 0;
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              height: 36.sp,
+                              width: 36.sp,
+                              decoration: BoxDecoration(
+                                color: Palette.red200,
+                                borderRadius: BorderRadius.circular(12.sp),
+                              ),
+                              child: Center(
+                                child: SvgPicture.asset(
+                                  'assets/icons/profile/notifs.svg',
+                                  width: 20.sp,
+                                  height: 20.sp,
+                                ),
+                              ),
+                            ),
+                            if (badge)
+                              Positioned(
+                                right: -2,
+                                top: -2,
+                                child: Container(
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.red,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
                     SizedBox(width: 12.sp),
                     Column(

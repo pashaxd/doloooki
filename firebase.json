@@ -1,33 +1,20 @@
 {
-  "flutter": {
-    "platforms": {
-      "android": {
-        "default": {
-          "projectId": "dolooki-fb888",
-          "appId": "1:416849058326:android:e144080d906ea43c97b337",
-          "fileOutput": "android/app/google-services.json"
-        }
-      },
-      "ios": {
-        "default": {
-          "projectId": "dolooki-fb888",
-          "appId": "1:416849058326:ios:0cf0b938e1da65d197b337",
-          "uploadDebugSymbols": false,
-          "fileOutput": "ios/Runner/GoogleService-Info.plist"
-        }
-      },
-      "macos": {
-        "default": {
-          "projectId": "dolooki-fb888",
-          "appId": "1:416849058326:ios:0cf0b938e1da65d197b337",
-          "uploadDebugSymbols": false,
-          "fileOutput": "macos/Runner/GoogleService-Info.plist"
-        }
-      }
-    }
-  },
   "firestore": {
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }

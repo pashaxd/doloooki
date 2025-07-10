@@ -7,6 +7,7 @@ import 'dart:async';
 class NotificationsController extends GetxController {
   final NotificationsService _service = NotificationsService();
   final RxList<NotificationModel> notifications = <NotificationModel>[].obs;
+  final RxInt unreadCount = 0.obs;
   StreamSubscription<User?>? _authSubscription;
 
   // Фильтры
@@ -27,10 +28,44 @@ class NotificationsController extends GetxController {
         // Пользователь вышел из системы, очищаем данные
         notifications.clear();
       } else {
-        // Пользователь вошел в систему, загружаем уведомления
-        loadNotifications();
+        // Пользователь вошел в систему, загружаем уведомления с задержкой
+        // чтобы избежать состояния гонки с Firestore permissions
+        _loadNotificationsWithDelay();
       }
     });
+
+    // Обновляем счётчик при любых изменениях списка уведомлений
+    ever(notifications, (_) => _updateUnreadCount());
+  }
+
+  // Загрузка уведомлений с задержкой и повторными попытками
+  Future<void> _loadNotificationsWithDelay() async {
+    // Ждем 500мс для синхронизации Firebase Auth токена с Firestore
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    int retryCount = 0;
+    const maxRetries = 3;
+    
+    while (retryCount < maxRetries) {
+      try {
+        await loadNotifications();
+        return; // Успешно загружено, выходим
+      } catch (e) {
+        retryCount++;
+        print('⚠️ Попытка $retryCount загрузки уведомлений не удалась: $e');
+        
+        if (e.toString().contains('permission-denied') && retryCount < maxRetries) {
+          // Ждем перед повторной попыткой (экспоненциальная задержка)
+          await Future.delayed(Duration(milliseconds: 1000 * retryCount));
+        } else {
+          // Если это не ошибка разрешений или достигнуто максимальное количество попыток
+          if (e.toString().contains('permission-denied')) {
+            notifications.clear();
+          }
+          break;
+        }
+      }
+    }
   }
 
   @override
@@ -166,7 +201,7 @@ class NotificationsController extends GetxController {
   }
 
   // Получение количества непрочитанных уведомлений
-  int get unreadCount => notifications.length;
+  int get totalUnread => unreadCount.value;
 
   // Получение уведомлений определенного типа
   List<NotificationModel> getNotificationsByType(String type) {
@@ -178,5 +213,19 @@ class NotificationsController extends GetxController {
     final sorted = notifications.toList()
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return sorted.take(count).toList();
+  }
+
+  void _updateUnreadCount() {
+    unreadCount.value = notifications.where((n) => !n.isRead).length;
+  }
+
+  Future<void> markAllAsRead() async {
+    if (userId.isEmpty) return;
+    try {
+      await _service.markAllNotificationsRead(userId);
+      await loadNotifications();
+    } catch (e) {
+      print('Error marking notifications as read: $e');
+    }
   }
 }

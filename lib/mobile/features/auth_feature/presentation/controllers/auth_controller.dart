@@ -121,24 +121,10 @@ class AuthController extends GetxController {
           final user = userCredential.user;
           
           if (user != null) {
-            // Проверяем, есть ли профиль пользователя
-            final userDoc = await FirebaseFirestore.instance
-                .collection('users')
-                .doc(user.uid)
-                .get();
-                
-            // Если профиль не существует или не заполнены обязательные поля
-            if (!userDoc.exists) {
-              Get.offAll(() => CreatingProfileScreen());
-              return;
-            }
+            // Проверяем профиль с задержкой и повторными попытками
+            final shouldGoToProfileCreation = await _checkUserProfileWithRetry(user.uid);
             
-            final userData = userDoc.data() as Map<String, dynamic>?;
-            if (userData == null ||
-                userData['name'] == null ||
-                userData['surname'] == null ||
-                userData['name'].toString().trim().isEmpty ||
-                userData['surname'].toString().trim().isEmpty) {
+            if (shouldGoToProfileCreation) {
               Get.offAll(() => CreatingProfileScreen());
               return;
             }
@@ -207,24 +193,10 @@ class AuthController extends GetxController {
       final user = userCredential.user;
       
       if (user != null) {
-        // Проверяем, есть ли профиль пользователя
-        final userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .get();
-            
-        // Если профиль не существует или не заполнены обязательные поля
-        if (!userDoc.exists) {
-          Get.offAll(() => CreatingProfileScreen());
-          return;
-        }
+        // Проверяем профиль с задержкой и повторными попытками
+        final shouldGoToProfileCreation = await _checkUserProfileWithRetry(user.uid);
         
-        final userData = userDoc.data() as Map<String, dynamic>?;
-        if (userData == null ||
-            userData['name'] == null ||
-            userData['surname'] == null ||
-            userData['name'].toString().trim().isEmpty ||
-            userData['surname'].toString().trim().isEmpty) {
+        if (shouldGoToProfileCreation) {
           Get.offAll(() => CreatingProfileScreen());
           return;
         }
@@ -240,6 +212,58 @@ class AuthController extends GetxController {
     } finally {
       isLoading.value = false;
     }
+  }
+
+  // Проверка профиля пользователя с повторными попытками
+  Future<bool> _checkUserProfileWithRetry(String userId) async {
+    int retryCount = 0;
+    const maxRetries = 3;
+    
+    // Ждем 500мс для синхронизации Firebase Auth токена с Firestore
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    while (retryCount < maxRetries) {
+      try {
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .get();
+            
+        // Если профиль не существует
+        if (!userDoc.exists) {
+          print('📝 Профиль пользователя не найден, перенаправляем на создание профиля');
+          return true; // Нужно создать профиль
+        }
+        
+        final userData = userDoc.data() as Map<String, dynamic>?;
+        if (userData == null ||
+            userData['name'] == null ||
+            userData['surname'] == null ||
+            userData['name'].toString().trim().isEmpty ||
+            userData['surname'].toString().trim().isEmpty) {
+          print('📝 Профиль пользователя неполный, перенаправляем на создание профиля');
+          return true; // Нужно дополнить профиль
+        }
+        
+        print('✅ Профиль пользователя найден и заполнен');
+        return false; // Профиль OK, переходим на главный экран
+        
+      } catch (e) {
+        retryCount++;
+        print('⚠️ Попытка $retryCount проверки профиля не удалась: $e');
+        
+        if (e.toString().contains('permission-denied') && retryCount < maxRetries) {
+          // Ждем перед повторной попыткой (экспоненциальная задержка)
+          await Future.delayed(Duration(milliseconds: 1000 * retryCount));
+        } else {
+          // Если это не ошибка разрешений или достигнуто максимальное количество попыток
+          print('❌ Не удалось проверить профиль после $maxRetries попыток, предполагаем что профиль нужно создать');
+          return true; // В случае ошибки лучше показать создание профиля
+        }
+      }
+    }
+    
+    return true; // Если все попытки неудачны, показываем создание профиля
   }
 
   void startResendTimer() {

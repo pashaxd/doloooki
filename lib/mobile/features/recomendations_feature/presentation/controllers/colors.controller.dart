@@ -29,8 +29,8 @@ class ColorsController extends GetxController {
         isLoading.value = false;
         error.value = '';
       } else {
-        // Пользователь вошел в систему, загружаем цвета
-        loadColorsModels();
+        // Пользователь вошел в систему, загружаем цвета с задержкой
+        _loadColorsModelsWithDelay();
       }
     });
   }
@@ -91,6 +91,26 @@ class ColorsController extends GetxController {
       }
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> _loadColorsModelsWithDelay() async {
+    // Ждем 500мс для синхронизации Firebase Auth токена с Firestore
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    try {
+      loadColorsModels();
+    } catch (e) {
+      print('⚠️ Ошибка загрузки цветов: $e');
+      if (e.toString().contains('permission-denied')) {
+        // Повторная попытка через секунду
+        await Future.delayed(Duration(seconds: 1));
+        try {
+          loadColorsModels();
+        } catch (e2) {
+          print('⚠️ Повторная попытка загрузки цветов также не удалась: $e2');
+        }
+      }
     }
   }
 }

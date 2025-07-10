@@ -109,10 +109,33 @@ class WardrobeController extends GetxController {
         _clothesSubscription?.cancel();
         _clothesService.clearCache();
       } else {
-        // Пользователь вошел в систему, инициализируем данные
-        _initializeUserData();
+        // Пользователь вошел в систему, инициализируем данные с задержкой
+        _initializeUserDataWithDelay();
       }
     });
+  }
+
+  Future<void> _initializeUserDataWithDelay() async {
+    // Ждем 500мс для синхронизации Firebase Auth токена с Firestore
+    await Future.delayed(Duration(milliseconds: 500));
+    
+    try {
+      await _initializeUserData();
+    } catch (e) {
+      print('⚠️ Ошибка инициализации данных пользователя: $e');
+      if (e.toString().contains('permission-denied')) {
+        // Повторная попытка через секунду
+        await Future.delayed(Duration(seconds: 1));
+        try {
+          await _initializeUserData();
+        } catch (e2) {
+          print('⚠️ Повторная попытка инициализации также не удалась: $e2');
+          isLoading.value = false;
+        }
+      } else {
+        isLoading.value = false;
+      }
+    }
   }
 
   Future<void> _initializeUserData() async {

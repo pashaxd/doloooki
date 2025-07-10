@@ -211,17 +211,29 @@ class SubscriptionService {
 
   // Получение подписок, которые истекают в течение дня
   Stream<List<SubscriptionModel>> getExpiringSubscriptions() {
+    // Если пользователь не авторизован — просто возвращаем пустой поток,
+    // чтобы не пытаться выполнять запрос без UID.
+    if (!isAuthenticated) {
+      return Stream.value([]);
+    }
+
     final now = DateTime.now();
     final tomorrow = now.add(Duration(days: 1));
 
+    // Запрашиваем только подписки текущего пользователя, что полностью
+    // соответствует правилам безопасности Firestore.
     return _firestore
-        .collectionGroup('subscriptions')
-        .where('isActive', isEqualTo: true)
+        .collection('users')
+        .doc(currentUserId)
+        .collection('subscriptions')
         .where('endDate', isGreaterThan: Timestamp.fromDate(now))
         .where('endDate', isLessThan: Timestamp.fromDate(tomorrow))
         .snapshots()
         .map((snapshot) => snapshot.docs
             .map((doc) => SubscriptionModel.fromFirestore(doc.id, doc.data()))
+            // фильтруем активные подписки в памяти, чтобы не нужен был
+            // композитный индекс (isActive == true)
+            .where((sub) => sub.isActive)
             .toList());
   }
 

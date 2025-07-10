@@ -32,6 +32,28 @@ class NotificationsService {
         .doc(notifId)
         .delete();
   }
+
+  Future<void> markNotificationRead(String userId, String notifId) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notifications')
+        .doc(notifId)
+        .update({'isRead': true});
+  }
+
+  Future<void> markAllNotificationsRead(String userId) async {
+    final batch = _firestore.batch();
+    final snapshot = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('notifications')
+        .get();
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+    await batch.commit();
+  }
 }
 
 

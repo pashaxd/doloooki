@@ -1,6 +1,8 @@
 import 'package:doloooki/utils/palette.dart';
 import 'package:doloooki/utils/text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:doloooki/mobile/features/profile_feature/presentations/controllers/notifications_controller.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
@@ -14,6 +16,7 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final notifController = Get.put(NotificationsController(), permanent: true);
     return Container(
       height: 70,
       decoration: BoxDecoration(
@@ -52,6 +55,7 @@ class CustomBottomNavBar extends StatelessWidget {
             label: 'Профиль',
             selected: currentIndex == 4,
             onTap: () => onTap(4),
+            showBadgeRx: notifController.unreadCount,
           ),
         ],
       ),
@@ -64,23 +68,50 @@ class _NavBarItem extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final RxInt? showBadgeRx;
 
   const _NavBarItem({
     required this.icon,
     required this.label,
     required this.selected,
     required this.onTap,
+    this.showBadgeRx,
   });
 
   @override
   Widget build(BuildContext context) {
     final color = selected ? Palette.white50 : Palette.grey350;
+
+    Widget iconWidget = Image.asset(icon, color: color, width: 24, height: 24);
+
+    if (showBadgeRx != null) {
+      iconWidget = Obx(() => Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Image.asset(icon, color: color, width: 24, height: 24),
+              if (showBadgeRx!.value > 0)
+                Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          ));
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(icon, color: color, width: 24, height: 24),
+          iconWidget,
           const SizedBox(height: 4),
           Text(
             label,
